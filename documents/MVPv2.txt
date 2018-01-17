@@ -1,0 +1,47 @@
+********** MVP v 2
+
+FOR DEMO:  FOCUS ON INDIVIDUAL'S ACTIVITIES IN THE APP	
+	
+
+CONTRIBUTORS
+
+			*** Pick it up as Individual Logged In:
+
+			1 - 
+					- I can display qualifications that I've already added	
+					- I can see specific causes - gen interest; [human rights], [immigration]
+					- I can view my profile
+
+			2 - I can do a general search for ways that I can be involved by region, cause, organization name
+					- early on:  this is where links to contribution site will be
+			
+
+
+
+
+
+
+
+NEXT ...
+
+NFP MATCHMAKER
+
+ORGANIZATION
+
+			1 - I can create an account
+				(part of create account) follows from above - I can tell the world about my organization and what we do
+	
+			2 - I can post/manage specific needs / opportunities
+					- I can confine the above activities to a specified geographic region	
+					- I can solicit financial contributions for specific causes that we are working on	
+	
+
+
+
+
+
+
+
+
+
+

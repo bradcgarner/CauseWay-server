@@ -1,0 +1,74 @@
+********** ORIGINAL
+
+
+NFP MATCHMAKER
+
+ORGANIZATION
+			1 - I can create an account - and log in to that account
+				(part of create account) follows from above - I can tell the world about my organization and what we do
+	
+			2 - I can post/manage specific needs / opportunities
+					- I can confine the above activities to a specified geographic region	
+					- I can solicit financial contributions for specific causes that we are working on	
+	
+				--- MVP ---
+	
+			3 - I can search the services / offerings that contributors have posted
+
+			4 - Transaction - org and contributor connected (needs clarification)
+	
+			5 - I can send information and reach out to my subscribers
+
+			6 - I can provide recommendations/feedback on contributors that I've worked with
+					- I can share a "gold list" of contributors - w contributors' consent
+					- I can list past contributors which will show on their profiles
+
+
+CONTRIBUTORS
+			1 - I can create an account - and log in to that account
+					- I can tell the world about my qualifications	
+					- I can sign up for specific causes - gen interest; [human rights], [immigration]
+					- I can manage my profile, including blocking/removing organization-placed content
+
+			2 - I can do a general search for ways that I can be involved by region, cause, organization name
+					- and express interest
+					- early on:  this is where links to contribution site will be
+			
+				--- MVP ---			
+			
+			3 - Transaction - org and contributor connected (needs clarification)
+					
+			4 - I can list specific skills, goods that I am willing to contribute
+				** must be done before or at same time as #3 above
+
+			5 - I can subscribe to organizations
+				** must be done before or at same time as #5 above
+
+			6 - much later
+			
+				- I can "send" opportunities to friends
+				- I can share my history of involvement - must be verified by organization
+				- I can provide feedback on organizations that I've worked with
+
+			7 - very last
+
+				- eCommerce
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

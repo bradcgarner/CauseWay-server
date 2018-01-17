@@ -1,0 +1,15 @@
+Testing
+https://github.com/tylercollier/redux-form-test/blob/master/tests/unit/index.js
+
+React Widgets
+https://redux-form.com/7.2.0/examples/react-widgets/
+
+Localization
+https://github.com/jquense/react-widgets/blob/v4/packages/docs/components/pages/i18n.md
+http://momentjs.com/docs/#/get-set/iso-weekday/
+http://momentjs.com/docs/#/use-it/typescript/
+https://www.npmjs.com/package/react-moment
+https://github.com/jquense/react-widgets/issues/486
+
+Nested Routing
+https://code.tutsplus.com/tutorials/understanding-nested-routing-in-react--cms-27955

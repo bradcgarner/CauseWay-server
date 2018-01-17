@@ -1,0 +1,11 @@
+language: node_js
+node_js: node
+services:
+- postgresql
+deploy:
+  provider: heroku
+  api_key:
+    secure: SGkmBp7+Qa3tsGkEd9QTSSTS5u4W/v9QPzC+pIuclgiDLj66Vfj8qHZaZO814xndG5ln+5zaVeqcIP1yxCsjA167BOoYr6iB8mjvCdlKRmo3BmA/xCKuRkkZyWuNAjXyF1MW1qX5r24ujU05VVRKlSo48u6npoofD5GKVtZ+c4B6UcVjgzzmBqQ9BndZh19zvXzU6JvwhfbvCdrZWNGUYdTBvb7gmy9ObThLPHpnujnmlWOXu2cpSVS5FkX/0bfMMtnz7Cx6M1d0/KlKaJEXfZZBF7ykQrGnjzzHp/gqfoGSUUKyhQupsc3Xcq2uBGeNVodNovGWfsaeR1lDXbOOPjzW9jD3f4PlCQTKo3Czc14gDULqd2QwFyRnluYgJB3kcA1PEH+8hi8oaeg+a3RgwvPd/1DnqxZ62lj1Ic+AIbmgBio8g978Wub/BvgKpWVcjgtQrpMRIvYf5OmM9OxQV4rZspYAID0LdxeuM8KhinBhsqzGp5rruJtb7eSv/Le6PXu2DZhrDq32PMLo+zCmRF3Fdj/uXDba5woQ4UIFzqhFigb4qHuz0KjYKyTrcktTKAMjmdGIl5loFhYQ8n/EjdVdZ8CX3kLNPyXMsO/qNJ8hR2/XW1wTADhO65rL7n9bWIgVbyL3sYOLl6TEE50xRMuDQlwbDoJhjJLFIrcv6RQ=
+  app: dry-escarpment-60455
+  on:
+    repo: brianjb-lfl/npm-server

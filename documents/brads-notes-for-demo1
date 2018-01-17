@@ -1,0 +1,28 @@
+These first notes are actually Brian's work that we collaborated on in the beginning:
+
+Database schema
+Carefully considered all near-term and longer-term functions of the app, and modeled that in the most streamlined way possible.
+2 primary tables: users and opportunities.
+Users encompass organizations and individuals.
+Opportunities encompass any opportunity to give time, goods, financially, and encompasses offers to give (such as an individual offering to tutor).
+
+Remaining tables support the 2 primary tables.
+Considerations included not only data persistence, but how the data will be used.
+E.g. organizations and individual users could be considered as different tables, but their data persistence needs are about a 75% overlap of each other.  However, functionality of these two groups is also about a 75% overlap of each other.  So we have organizations and individual users in 1 table, with parallel structure in state and functionality, with a few options by type.
+This should reduce the complexity and improve the maintainability of our code.
+
+We chose SQL for leveraging joins.
+
+ #####################
+
+The remaining notes are just Redux.
+
+Redux state has 5 primary keys, designed to parallel the SQL database and provide ease of management and expansion:
+
+user (high level of detail of single user that is logged in; user can be an organization)
+userViewed (high level of detail of single user other than user logged in, e.g. viewing an organization's profile page)
+userList (low- to medium-level detail of a list of users)
+opportunity (high level of detail of a single opportunty in focus)
+opportunitiesList (low- to medium-level detail of a list of opportunities)
+
+The two list keys are capable of saving multiple lists if needed.

@@ -1,0 +1,42 @@
+{
+  "name": "npm-server",
+  "authors": "Brian Besaw, Ben Malin, Brad Garner",
+  "version": "0.1.0",
+  "description": "npm-server",
+  "engines": {
+    "node": "8.2.1"
+  },
+  "license": "MIT",
+  "main": "/server/server.js",
+  "private": true,
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.18.2",
+    "cors": "^2.8.4",
+    "dotenv": "^4.0.0",
+    "express": "^4.16.2",
+    "jsonwebtoken": "^8.1.0",
+    "knex": "^0.13.0",
+    "morgan": "^1.9.0",
+    "nodemon": "^1.12.1",
+    "passport": "^0.4.0",
+    "passport-jwt": "^3.0.1",
+    "passport-local": "^1.0.0",
+    "pg": "^7.3.0"
+  },
+  "scripts": {
+    "start": "nodemon server.js",
+    "dev": "nodemon server.js",
+    "test": "mocha --colors test/*.test.js",
+    "coverage": "nyc mocha --colors test/*.test.js",
+    "nyc": "test",
+    "cover": "nodemon --exec nyc --reporter=lcov --reporter=text-summary mocha test/*.test.js",
+    "travis": "mocha test/*test.js"
+  },
+  "devDependencies": {
+    "chai": "^4.1.2",
+    "chai-http": "^3.0.0",
+    "mocha": "^3.5.3",
+    "nyc": "^11.2.1"
+  }
+}

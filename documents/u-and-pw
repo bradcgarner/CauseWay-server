@@ -1,0 +1,7 @@
+
+api/auth/login
+
+api/users/register - create new account
+post
+
+"username": "diegotheattorney", "password": "diegospassword",
