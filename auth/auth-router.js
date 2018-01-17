@@ -2,7 +2,7 @@
 
 const express = require('express');
 const authRouter = express.Router();
-const { epHelp } = require('../routers/router-helpers');
+const { helper } = require('../routers/router-helpers');
 const passport = require('passport');
 const jwt = require('jsonwebtoken');
 const { localStrategy } = require('./local-strategy');
@@ -27,17 +27,12 @@ const createAuthToken = function (user){
 const localAuth = passport.authenticate('local', { session: false });
 const jwtAuth = passport.authenticate('jwt', { session: false });
 
-// comm test
-authRouter.get('/testify', jwtAuth, (req, res) => {
-  res.status(200).json({message: 'Good to go'});
-});
-
 // login
 authRouter.post('/login', localAuth, (req, res) => {
 
   let usrId;
   let respObj = {};
-
+  
   let user = req.body;
   return knex('users')
     .select()
@@ -50,18 +45,18 @@ authRouter.post('/login', localAuth, (req, res) => {
       });
       const authToken = createAuthToken(user);
       usrId = result[0].id;
-      return epHelp.buildUser(usrId)
+      return helper.buildUser(usrId)
         .then(result => {
-          respObj = epHelp.convertCase(result, 'snakeToCC');
-          return (epHelp.getExtUserInfo(usrId));
+          respObj = helper.convertCase(result, 'snakeToCC');
+          return (helper.getExtUserInfo(usrId));
         })
         .then( resultObj => {
           respObj = Object.assign( {}, respObj, resultObj, {
             authToken: authToken
           });
-          res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-          res.setHeader("Pragma", "no-cache");
-          res.setHeader("Expires", 0);  
+          res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+          res.setHeader('Pragma', 'no-cache');
+          res.setHeader('Expires', 0);  
           res.status(201).json(respObj);
         })
         .catch( err => {

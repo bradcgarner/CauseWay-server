@@ -137,7 +137,7 @@ helper.getExtUserInfo = function(userId) {
     .select( rolesKeys )
 
     .then( adminOfs => {
-      // console.log('adminOfs returned', adminOfs);
+      console.log('adminOfs returned', adminOfs[0]);
       adminOfArr = adminOfs.slice();
 
       // admins
@@ -148,7 +148,7 @@ helper.getExtUserInfo = function(userId) {
         .select(rolesKeys);
     })
     .then( admins => {
-      // console.log('admins returned', admins);
+      console.log('admins returned', admins[0]);
       adminsArr = admins.slice();
 
       // following
@@ -159,7 +159,7 @@ helper.getExtUserInfo = function(userId) {
         .select(rolesKeys);
     })
     .then( follows => {
-      // console.log('follows returned', follows);
+      console.log('follows returned', follows[0]);
       followsArr = follows.slice();
 
       // opportunities
