@@ -1,4 +1,5 @@
 'use strict';
+// I think this entire file is redundant
 
 let epDbHelp = {};
 
