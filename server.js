@@ -14,22 +14,6 @@ app.use(
   })
 );
 
-const { userRouter } = require('./routers/user-router');
-const { oppRouter } = require('./routers/opp-router');
-const { causeRouter } = require('./routers/cause-router');
-const { adminRouter } = require('./routers/admin-router');
-const { authRouter } = require('./auth/auth-router');
-const { roleRouter } = require('./routers/role-router');
-const { responseRouter } = require('./routers/response-router');
-
-app.use('/api/users', userRouter);
-app.use('/api/opportunities', oppRouter);
-app.use('/api/causes', causeRouter);
-app.use('/api/admin', adminRouter);
-app.use('/api/auth', authRouter);
-app.use('/api/roles', roleRouter);
-app.use('/api/responses', responseRouter);
-
 app.use('*', (req, res) => {
   return res.status(404).json({message: 'Not found'});
 });
@@ -47,5 +31,21 @@ function runServer(port = PORT) {
 if (require.main === module) {
   runServer();
 }
+
+const { userRouter } = require('./routers/user-router');
+const { oppRouter } = require('./routers/opp-router');
+const { causeRouter } = require('./routers/cause-router');
+const { adminRouter } = require('./routers/admin-router');
+const { authRouter } = require('./auth/auth-router');
+const { roleRouter } = require('./routers/role-router');
+const { responseRouter } = require('./routers/response-router');
+
+app.use('/api/users', userRouter);
+app.use('/api/opportunities', oppRouter);
+app.use('/api/causes', causeRouter);
+app.use('/api/admin', adminRouter);
+app.use('/api/auth', authRouter);
+app.use('/api/roles', roleRouter);
+app.use('/api/responses', responseRouter);
 
 module.exports = { app, runServer };
