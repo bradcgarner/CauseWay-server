@@ -4,7 +4,8 @@
   "version": "0.1.0",
   "description": "npm-server",
   "engines": {
-    "node": "8.2.1"
+    "node": "8.2.1",
+    "npm": "~1.0.20"
   },
   "license": "MIT",
   "main": "/server/server.js",
