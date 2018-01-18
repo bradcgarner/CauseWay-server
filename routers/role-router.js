@@ -14,17 +14,6 @@ process.stdout.write('\x1Bc');
 passport.use(jwtStrategy);
 const jwtAuth = passport.authenticate('jwt', { session: false });
 
-// comm test
-roleRouter.get('/testify/', (req, res) => {
-  res.status(200).json({message: 'Good to go'});
-});
-
-// new function test
-roleRouter.post('/helpertest/', jsonParser, (req, res) => {
-  const modObj = epDbHelp.scrubFields(req.body, 'roles');
-  res.status(200).json(modObj);  
-});
-
 // POST api/roles
 roleRouter.post('/', jsonParser, (req, res) => {
   const knex = require('../db');
