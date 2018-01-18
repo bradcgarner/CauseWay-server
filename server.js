@@ -28,9 +28,7 @@ function runServer(port = PORT) {
     });
 }
 
-if (require.main === module) {
-  runServer();
-}
+if (require.main === module) { runServer(); }
 
 const { userRouter } = require('./routers/user-router');
 const { oppRouter } = require('./routers/opp-router');
