@@ -28,10 +28,10 @@ CREATE TABLE users (
   location_state text,
   -- default "USA"
   location_country text,
-  availability text
+  availability text,
   bio text,
   password text,
-  timestamp_created timestamp default current_timestamp,
+  timestamp_created timestamp default current_timestamp
 );
 
 CREATE TABLE opportunities (
@@ -53,8 +53,8 @@ CREATE TABLE opportunities (
   --default "USA"
   location_country text,
   -- link = url for the event (do not populate [on front] if the same as the user's url)
-  link text default null
-  timestamp_created timestamp default current_timestamp,
+  link text default null,
+  timestamp_created timestamp default current_timestamp
 );
 
 -- @@@@@@@@@@@ CAUSES @@@@@@@@@@@
@@ -118,12 +118,12 @@ CREATE TABLE responses (
   id serial primary key,
   id_opportunity integer references opportunities on delete cascade,
   id_user integer references users on delete cascade,
-  notes text
+  notes text,
   -- status pending, accepted, completed, deleted, denied
   response_status text default 'pending',
   -- timestamp_status_change = most recent status change
   timestamp_status_change timestamp,
-  timestamp_created timestamp default current_timestamp,
+  timestamp_created timestamp default current_timestamp
 );
 
 -- @@@@@@@@@@@ END CREATE TABLE, START INSERT INTO @@@@@@@@@@@
@@ -135,7 +135,8 @@ VALUES
 ('suesmith', 'individual', 'Waldorf', 'MD', 'Sue', 'Smith', null), 
 ('capfoodbank', 'organization', 'Washington', 'DC', null, null, 'Capital Food Bank'),
 ('some', 'organization', 'Washington', 'DC', null, null, 'So Others May Eat (SOME)'),
-('joejoe', 'individual', 'Altoona', 'PA', 'Joe', 'Josephson', null);
+('joejoe', 'individual', 'Altoona', 'PA', 'Joe', 'Josephson', null
+);
 
 
 INSERT into opportunities 
@@ -144,17 +145,20 @@ VALUES
 ('goods', 'false', 'need baked goods', 'We need baked goods for a charity event.', '2018-02-14 18:30:00', '2018-02-14 20:30:00', 'Plano', 'TX', 3, null), 
 ('services', 'false', 'volunteers needed!', 'Reading to children after school, ongoing basis.', '2018-03-01 15:00:00', 'infinity', 'Athens', 'GA', 4, null), 
 ('financial', 'false', 'money to buy books', 'We want to raise $15,000,000 to buy a boatload of books! Then we will ship them to Georgia.', '2018-01-01 12:00:00', 'infinity', 'Providence', 'RA', 4, null), 
-('services', 'true', 'I tutor math', 'I love algegra and trig and would gladly tutor students from 3:30 to 4:30 on weekdays.', '2018-02-01 15:30:00', '2018-12-31 16:30:00', 'Detroit', 'MI', 1, 'http://www.mrtutor.com');
+('services', 'true', 'I tutor math', 'I love algegra and trig and would gladly tutor students from 3:30 to 4:30 on weekdays.', '2018-02-01 15:30:00', '2018-12-31 16:30:00', 'Detroit', 'MI', 1, 'http://www.mrtutor.com'
+);
 
 INSERT into causes 
 (cause) 
 VALUES
-('children'), ('homelessness'), ('hunger'), ('elderly'), ('education'), ('health'), ('environment'), ('community'), ('illiteracy'), ('social justice');
+('children'), ('homelessness'), ('hunger'), ('elderly'), ('education'), ('health'), ('environment'), ('community'), ('illiteracy'), ('social justice')
+;
 
 INSERT into skills 
 (skill) 
 VALUES
-('listening'), ('tutoring'), ('administrative'), ('clerical'), ('medical services'), ('legal services'), ('manual labor'), ('meal preparation'), ('driving'), ('construction'), ('working with children'), ('working with adults'), ('working with elderly'), ('working with disabled'), ('working with animals');
+('listening'), ('tutoring'), ('administrative'), ('clerical'), ('medical services'), ('legal services'), ('manual labor'), ('meal preparation'), ('driving'), ('construction'), ('working with children'), ('working with adults'), ('working with elderly'), ('working with disabled'), ('working with animals')
+;
 
 
 INSERT into users_causes 
@@ -183,6 +187,6 @@ VALUES
 (1,null,'https://www.google.com'),(3,'homepage','http://bradgarner.com'),(4, 'financial', 'https://paypal.com');
 
 INSERT into responses
-(id_user, id_opp, response_status, timestamp_status_change)
+(id_user, id_opportunity, response_status, timestamp_status_change)
 VALUES
 (5,4,'offered',null),(1,3,'offered',null),(2, 2, 'accepted', '2017-12-05 11:45:03');
