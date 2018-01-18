@@ -14,11 +14,6 @@ process.stdout.write('\x1Bc');
 passport.use(jwtStrategy);
 const jwtAuth = passport.authenticate('jwt', { session: false });
 
-// comm test
-userRouter.get('/testify/', (req, res) => {
-  res.status(200).json({message: 'Good to go'});
-});
-
 // GET api/users/list
 userRouter.get('/list', (req, res) => {
   return helper.buildListOfUsers()

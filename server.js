@@ -23,6 +23,8 @@ app.use(
   })
 );
 
+app.listen(5000);
+
 app.use('/api/users', userRouter);
 app.use('/api/opportunities', oppRouter);
 app.use('/api/causes', causeRouter);
