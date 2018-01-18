@@ -54,7 +54,7 @@ userRouter.get('/:id', (req, res) => {
 // POST api/users/register
 userRouter.post('/register', jsonParser, (req, res) => {
   const knex = require('../db');
-  const reqFields = ['username', 'password'];
+  const reqFields = ['username', 'password', 'userType'];
   const missingField = reqFields.filter( field => !(field in req.body));
 
   // check for missing username or passwd
@@ -62,12 +62,13 @@ userRouter.post('/register', jsonParser, (req, res) => {
     return res.status(422).json({
       code: 422,
       reason: 'ValidationError',
-      message: 'Error: username and password are required'
+      message: 'Error: username, password, and user type are required'
     });
   }
 
   // check for dup username
   let inUsrObj = Object.assign( {}, req.body);
+  console.log('body', inUsrObj);
   return knex('users')
     .select()
     .where({username: inUsrObj.username})
@@ -88,6 +89,7 @@ userRouter.post('/register', jsonParser, (req, res) => {
     .then( result => {
       // build db insert obj
       let convInUsrObj = helper.convertCase(inUsrObj, 'ccToSnake');
+      console.log('convInUsrObj',convInUsrObj)
       if(convInUsrObj.user_type === 'organization') {
         convInUsrObj = Object.assign( {}, convInUsrObj, {
           password: result,

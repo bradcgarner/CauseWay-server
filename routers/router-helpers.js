@@ -159,18 +159,19 @@ helper.getExtUserInfo = function(userId) {
         .select(rolesKeys);
     })
     .then( follows => {
-      console.log('follows returned', follows[0]);
       followsArr = follows.slice();
+      console.log('follows returned', followsArr[0]);
 
-      // opportunities
+      // following
       return knex('opportunities')
+        // .join('users', 'roles.id_user_receiving', '=', 'users.id')
         .where('id_user', '=', userId)
         .select(opportunitiesKeys)
         .orderBy('timestamp_start');
     })
-    .then( opps => {
-      console.log('opps returned', opps.rows[0]);
-      oppsArr = opps.rows.slice();
+    .then( opportunities => {
+      oppsArr = opportunities.slice();
+      console.log('opportunities returned', oppsArr[0]);
 
       const causePromisesArray = oppsArr.map((opp,index)=>{
         return knex('opportunities_causes')

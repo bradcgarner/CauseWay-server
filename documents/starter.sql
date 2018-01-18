@@ -15,35 +15,36 @@ DROP TABLE IF EXISTS skills CASCADE;
 
 CREATE TABLE users (
   id serial primary key,
-  timestamp_created timestamp default current_timestamp,
   username text UNIQUE,
-  password text,
   -- type: individual, organization
   user_type text default 'individual',
-  location_city text,
-  location_state text,
-  -- default "USA"
-  location_country text,
-  bio text,
   -- below for individuals only
   first_name text,
   last_name text, 
   -- below for organizations only
   organization text,
   logo text,
+  location_city text,
+  location_state text,
+  -- default "USA"
+  location_country text,
   availability text
+  bio text,
+  password text,
+  timestamp_created timestamp default current_timestamp,
 );
 
 CREATE TABLE opportunities (
   id serial primary key,
-  timestamp_created timestamp default current_timestamp,
-  -- type: goods, services, financial
+  -- the user below is the "owner" of this opportunity
+  id_user integer references users on delete cascade,
   organization text,
+  -- type: goods, services, financial
   opportunity_type text default 'services',
   -- offer: true if offer to provide, false if a need
-  offer boolean default 'false',
+  offer boolean default 'false',  
   title text not null,
-  -- do we want description and identification of need combined?
+  logo text,  
   narrative text not null,
   timestamp_start timestamp,
   timestamp_end timestamp,
@@ -51,10 +52,9 @@ CREATE TABLE opportunities (
   location_state text,
   --default "USA"
   location_country text,
-  -- the user below is the "owner" of this opportunity
-  id_user integer references users on delete cascade,
   -- link = url for the event (do not populate [on front] if the same as the user's url)
   link text default null
+  timestamp_created timestamp default current_timestamp,
 );
 
 -- @@@@@@@@@@@ CAUSES @@@@@@@@@@@
@@ -116,14 +116,14 @@ CREATE TABLE roles (
 
 CREATE TABLE responses (
   id serial primary key,
+  id_opportunity integer references opportunities on delete cascade,
   id_user integer references users on delete cascade,
-  id_opp integer references opportunities on delete cascade,
+  notes text
   -- status pending, accepted, completed, deleted, denied
   response_status text default 'pending',
   -- timestamp_status_change = most recent status change
   timestamp_status_change timestamp,
   timestamp_created timestamp default current_timestamp,
-  notes text
 );
 
 -- @@@@@@@@@@@ END CREATE TABLE, START INSERT INTO @@@@@@@@@@@
@@ -185,4 +185,4 @@ VALUES
 INSERT into responses
 (id_user, id_opp, response_status, timestamp_status_change)
 VALUES
-(5,4,'pending',null),(1,3,'pending',null),(2, 2, 'accepted', '2017-12-05 11:45:03');
+(5,4,'offered',null),(1,3,'offered',null),(2, 2, 'accepted', '2017-12-05 11:45:03');
