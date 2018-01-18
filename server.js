@@ -23,13 +23,13 @@ app.use(
   })
 );
 
-// app.use('/api/users', userRouter);
-// app.use('/api/opportunities', oppRouter);
-// app.use('/api/causes', causeRouter);
-// app.use('/api/admin', adminRouter);
-// app.use('/api/auth', authRouter);
-// app.use('/api/roles', roleRouter);
-// app.use('/api/responses', responseRouter);
+app.use('/api/users', userRouter);
+app.use('/api/opportunities', oppRouter);
+app.use('/api/causes', causeRouter);
+app.use('/api/admin', adminRouter);
+app.use('/api/auth', authRouter);
+app.use('/api/roles', roleRouter);
+app.use('/api/responses', responseRouter);
 
 app.use('*', (req, res) => {
   return res.status(404).json({message: 'Not found'});
