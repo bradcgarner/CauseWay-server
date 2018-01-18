@@ -6,6 +6,7 @@ const morgan = require('morgan');
 const path = require('path');
 const app = express();
 app.use(morgan('common', { skip: () => process.env.DB_MODE === 'test'}));
+const { PORT, CLIENT_ORIGIN } = require('./config');
 
 app.use(
   cors({
@@ -13,7 +14,6 @@ app.use(
   })
 );
 
-const { PORT, CLIENT_ORIGIN } = require('./config');
 const { userRouter } = require('./routers/user-router');
 const { oppRouter } = require('./routers/opp-router');
 const { causeRouter } = require('./routers/cause-router');
