@@ -137,7 +137,6 @@ helper.getExtUserInfo = function(userId) {
     .select( rolesKeys )
 
     .then( adminOfs => {
-      console.log('adminOfs returned', adminOfs[0]);
       adminOfArr = adminOfs.slice();
 
       // admins
@@ -148,7 +147,6 @@ helper.getExtUserInfo = function(userId) {
         .select(rolesKeys);
     })
     .then( admins => {
-      console.log('admins returned', admins[0]);
       adminsArr = admins.slice();
 
       // following
@@ -160,18 +158,15 @@ helper.getExtUserInfo = function(userId) {
     })
     .then( follows => {
       followsArr = follows.slice();
-      console.log('follows returned', followsArr[0]);
 
       // following
       return knex('opportunities')
-        // .join('users', 'roles.id_user_receiving', '=', 'users.id')
         .where('id_user', '=', userId)
         .select(opportunitiesKeys)
         .orderBy('timestamp_start');
     })
     .then( opportunities => {
       oppsArr = opportunities.slice();
-      console.log('opportunities returned', oppsArr[0]);
 
       const causePromisesArray = oppsArr.map((opp,index)=>{
         return knex('opportunities_causes')
