@@ -4,10 +4,7 @@ const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 const path = require('path');
-
-
 const app = express();
-app.listen(5000);
 app.use(morgan('common', { skip: () => process.env.DB_MODE === 'test'}));
 
 app.use(
@@ -24,7 +21,6 @@ const { adminRouter } = require('./routers/admin-router');
 const { authRouter } = require('./auth/auth-router');
 const { roleRouter } = require('./routers/role-router');
 const { responseRouter } = require('./routers/response-router');
-
 
 app.use('/api/users', userRouter);
 app.use('/api/opportunities', oppRouter);
