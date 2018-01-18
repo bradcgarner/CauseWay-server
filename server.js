@@ -14,22 +14,6 @@ app.use(
   })
 );
 
-app.use('*', (req, res) => {
-  return res.status(404).json({message: 'Not found'});
-});
-
-function runServer(port = PORT) {
-  const server = app
-    .listen(port, () => {
-      console.info(`App listening on port ${server.address().port}`);
-    })
-    .on('error', err => {
-      console.error(`Express failed to start ${err}`);
-    });
-}
-
-if (require.main === module) { runServer(); }
-
 const { userRouter } = require('./routers/user-router');
 const { oppRouter } = require('./routers/opp-router');
 const { causeRouter } = require('./routers/cause-router');
@@ -45,5 +29,21 @@ app.use('/api/admin', adminRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/roles', roleRouter);
 app.use('/api/responses', responseRouter);
+
+app.use('*', (req, res) => {
+  return res.status(404).json({message: 'Not found'});
+});
+
+function runServer(port = PORT) {
+  const server = app
+    .listen(port, () => {
+      console.info(`App listening on port ${server.address().port}`);
+    })
+    .on('error', err => {
+      console.error(`Express failed to start ${err}`);
+    });
+}
+
+if (require.main === module) { runServer(); }
 
 module.exports = { app, runServer };
