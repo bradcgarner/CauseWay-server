@@ -4,6 +4,18 @@ const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 const path = require('path');
+
+
+const app = express();
+app.listen(5000);
+app.use(morgan('common', { skip: () => process.env.DB_MODE === 'test'}));
+
+app.use(
+  cors({
+    origin: CLIENT_ORIGIN
+  })
+);
+
 const { PORT, CLIENT_ORIGIN } = require('./config');
 const { userRouter } = require('./routers/user-router');
 const { oppRouter } = require('./routers/opp-router');
@@ -13,17 +25,6 @@ const { authRouter } = require('./auth/auth-router');
 const { roleRouter } = require('./routers/role-router');
 const { responseRouter } = require('./routers/response-router');
 
-
-const app = express();
-app.use(morgan('common', { skip: () => process.env.DB_MODE === 'test'}));
-
-app.use(
-  cors({
-    origin: CLIENT_ORIGIN
-  })
-);
-
-app.listen(5000);
 
 app.use('/api/users', userRouter);
 app.use('/api/opportunities', oppRouter);
