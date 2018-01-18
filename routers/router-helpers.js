@@ -307,7 +307,6 @@ helper.buildOppList = function(queryObject) {
 };
 
 helper.buildOpp = function(inOppId) {
-
   let causeArr = [];
   let respArr = [];
   let oppObj = {};
