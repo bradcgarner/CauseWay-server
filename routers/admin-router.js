@@ -8,11 +8,6 @@ const { helper } = require('./router-helpers');
 
 process.stdout.write('\x1Bc');
 
-// comm test
-adminRouter.get('/testify/', (req, res) => {
-  res.status(200).json({message: 'Good to go'});
-});
-
 // GET api/admin/initialize
 adminRouter.get('/initialize', (req, res) => {
   let resObj = {};

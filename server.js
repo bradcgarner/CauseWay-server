@@ -6,7 +6,6 @@ const morgan = require('morgan');
 const path = require('path');
 const { PORT, CLIENT_ORIGIN } = require('./config');
 const { userRouter } = require('./routers/user-router');
-const { orgRouter } = require('./routers/org-router');
 const { oppRouter } = require('./routers/opp-router');
 const { causeRouter } = require('./routers/cause-router');
 const { adminRouter } = require('./routers/admin-router');
@@ -25,7 +24,6 @@ app.use(
 );
 
 app.use('/api/users', userRouter);
-// app.use('/api/orgs', orgRouter);
 app.use('/api/opportunities', oppRouter);
 app.use('/api/causes', causeRouter);
 app.use('/api/admin', adminRouter);
@@ -43,11 +41,9 @@ function runServer(port = PORT) {
       console.info(`App listening on port ${server.address().port}`);
     })
     .on('error', err => {
-      console.error('Express failed to start');
-      console.error(err);
+      console.error(`Express failed to start ${err}`);
     });
 }
-// test
 
 if (require.main === module) {
   runServer();
