@@ -5,13 +5,13 @@ const cors = require('cors');
 const morgan = require('morgan');
 const path = require('path');
 const { PORT, CLIENT_ORIGIN } = require('./config');
-// const { userRouter } = require('./routers/user-router');
-// const { oppRouter } = require('./routers/opp-router');
-// const { causeRouter } = require('./routers/cause-router');
-// const { adminRouter } = require('./routers/admin-router');
-// const { authRouter } = require('./auth/auth-router');
-// const { roleRouter } = require('./routers/role-router');
-// const { responseRouter } = require('./routers/response-router');
+const { userRouter } = require('./routers/user-router');
+const { oppRouter } = require('./routers/opp-router');
+const { causeRouter } = require('./routers/cause-router');
+const { adminRouter } = require('./routers/admin-router');
+const { authRouter } = require('./auth/auth-router');
+const { roleRouter } = require('./routers/role-router');
+const { responseRouter } = require('./routers/response-router');
 
 
 const app = express();
