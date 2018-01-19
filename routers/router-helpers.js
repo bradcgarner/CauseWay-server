@@ -196,7 +196,7 @@ helper.getExtUserInfo = function(userId) {
 
       // responses
       return knex('responses')
-        .join('opportunities', 'responses.id_opp', '=', 'opportunities.id')
+        .join('opportunities', 'responses.id_opportunity', '=', 'opportunities.id')
         .where('responses.id_user', '=', userId)
         .select(responsesOpportunitiesKeys)
         .orderBy('responses.timestamp_created');
@@ -325,7 +325,7 @@ helper.buildOpp = function(inOppId) {
       return knex('responses')
         .join('users', 'responses.id_user', '=', 'users.id')
         .select(responsesUsersKeys)
-        .where('responses.id_opp', '=', inOppId)
+        .where('responses.id_opportunity', '=', inOppId)
         .debug(false);
     })
     .then( responses => {
