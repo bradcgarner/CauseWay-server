@@ -13,8 +13,8 @@ process.stdout.write('\x1Bc');
 passport.use(jwtStrategy);
 const jwtAuth = passport.authenticate('jwt', { session: false });
 
-//GET api/opportunities/list
-oppRouter.get('/list', (req, res) => {
+//GET api/opportunities/
+oppRouter.get('/', (req, res) => {
   // check for query parameters
   let queryObject = {};
   if(Object.keys(req.query).length > 0) {

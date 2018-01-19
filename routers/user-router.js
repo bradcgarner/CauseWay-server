@@ -14,8 +14,8 @@ process.stdout.write('\x1Bc');
 passport.use(jwtStrategy);
 const jwtAuth = passport.authenticate('jwt', { session: false });
 
-// GET api/users/list
-userRouter.get('/list', (req, res) => {
+// GET api/users
+userRouter.get('/', (req, res) => {
   return helper.buildListOfUsers()
     .then(results => {
       const userArr = results.slice();
