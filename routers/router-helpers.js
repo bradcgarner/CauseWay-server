@@ -307,6 +307,7 @@ helper.buildOppList = function(queryObject) {
 };
 
 helper.buildOpp = function(inOppId) {
+  console.log('start built opp',inOppId)
   let causeArr = [];
   let respArr = [];
   let oppObj = {};
@@ -320,7 +321,11 @@ helper.buildOpp = function(inOppId) {
     .where('opportunities_causes.id_opp', '=', inOppId)
     .orderBy('causes.cause')
     .then( results => {
+      console.log('opportunities_causes',results)
+
       causeArr = results.map( cause => cause.cause);
+      console.log('causeArr',causeArr)
+
       // get responses
       return knex('responses')
         .join('users', 'responses.id_user', '=', 'users.id')
@@ -329,6 +334,8 @@ helper.buildOpp = function(inOppId) {
         .debug(false);
     })
     .then( responses => {
+      console.log('responses',responses)
+
       respArr = responses.slice();
       // get opp info
       return knex('opportunities')
@@ -337,16 +344,24 @@ helper.buildOpp = function(inOppId) {
         .where('opportunities.id', '=', inOppId)
         .debug(false);
     })
-    .then( result => {
-      oppObj = helper.convertCase(result[0], 'snakeToCC');
+    .then( opportunities => {
+      console.log('opportunities',opportunities)
+
+      oppObj = helper.convertCase(opportunities[0], 'snakeToCC');
+      console.log('oppObj',oppObj)
+
       return this.getOrg(oppObj.userId);
     })
     .then( result => {
+      console.log('opp converted case',result)
+
       opp = Object.assign( {}, oppObj, {
         organization: result,
         causes: causeArr,
         responses: respArr
       });
+      console.log('opp with causes and responses',opp)
+
       return opp;
     });
 };
@@ -392,6 +407,7 @@ helper.getTitle = function(oppId) {
 };
 
 helper.buildOppBase = function(inOppObj) {
+  console.log('buildOppBase',inOppObj);
 
   const {id,
     timestampCreated, 
@@ -423,6 +439,7 @@ helper.buildOppBase = function(inOppObj) {
     link
   };
   let retBaseObj = this.convertCase(opportunity, 'ccToSnake');
+  console.log('retBaseObj',retBaseObj);
 
   return retBaseObj;
 };

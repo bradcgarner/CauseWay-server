@@ -48,10 +48,13 @@ oppRouter.post('/', jsonParser, (req, res) => {
   let inOppObj = req.body;
   let retObj = {};
   let inCausesArr = (inOppObj.causes.length > 0) ? inOppObj.causes.slice() : [] ;
+  console.log('oppRouter',inOppObj,inCausesArr);
   // check for missing fields
   const reqFields = ['title', 'narrative', 'userId', 'causes'];
   const missingField = reqFields.find( field => !(field in inOppObj));
   if(missingField) {
+    console.log('missingField',missingField);
+
     return res.status(422).json({
       code: 422,
       reason: 'ValidationError',
@@ -61,33 +64,52 @@ oppRouter.post('/', jsonParser, (req, res) => {
   }
   // post base opportunity info - get id'
   const postOppObj = helper.buildOppBase(inOppObj);
+  console.log('postOppObj to insert',postOppObj);
   const knex = require('../db');
 
   return knex('opportunities')
     .insert(postOppObj)
     .returning(['id'])
     .then( result => {
+      console.log('after inserting',result);
+
       oppId = result[0].id;
+      console.log('oppId',oppId);
+
       if(inCausesArr.length > 0) {
+        console.log('inCausesArr',inCausesArr);
+
         return helper.buildOppCausesArr(oppId, inCausesArr)
+
           .then( postCausesArr => {
+            console.log('postCausesArr',postCausesArr);
             return knex('opportunities_causes')
               .insert(postCausesArr);
           });
       }
       else {
         // no causes in req, skip to response
+        console.log('no causes');
+
         return;
       }
     })
     .then( () => {
+      console.log('ready to build opp');
+
       return helper.buildOpp(oppId)
         .then( result => {
+          console.log('built opp',result);
+
           retObj = Object.assign( {}, result);
           res.status(201).json(retObj);      
         })
         .catch( err => {
+          console.log('err',err);
+
           if(err.reason === 'ValidationError') {
+            console.log('ValidationError');
+
             return res.status(err.code).json(err);
           }
           res.status(500).json({message: `Internal server error: ${err}`});

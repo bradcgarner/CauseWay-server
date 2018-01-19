@@ -34,50 +34,50 @@ authRouter.post('/login', localAuth, (req, res) => {
   let respObj = {};
   
   let user = req.body;
-  console.log('login', user);
+  // console.log('login', user);
   return knex('users')
     .select()
     .where('username', '=',  user.username)
     .then( result => {
-      console.log('user found in login', result);
+      // console.log('user found in login', result);
 
       user = Object.assign( {}, user, {
         first_name: result[0].first_name,
         last_name: result[0].last_name,
         user_type: result[0].user_type
       });      
-      console.log('user constructed', user);
+      // console.log('user constructed', user);
 
       const authToken = createAuthToken(user);
       usrId = result[0].id;
-      console.log('authToken usrId', authToken, usrId);
+      // console.log('authToken usrId', authToken, usrId);
 
       return helper.buildUser(usrId)
         .then(result => {
-          console.log('buildUser', result);
+          // console.log('buildUser', result);
 
           respObj = helper.convertCase(result, 'snakeToCC');
-          console.log('respObj', respObj);
+          // console.log('respObj', respObj);
 
           return (helper.getExtUserInfo(usrId));
         })
         .then( resultObj => {
-          console.log('resultObj', resultObj);
+          // console.log('resultObj', resultObj);
 
           respObj = Object.assign( {}, respObj, resultObj, {
             authToken: authToken
           });
-          console.log('respObj', respObj);
+          // console.log('respObj', respObj);
 
           res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
           res.setHeader('Pragma', 'no-cache');
           res.setHeader('Expires', 0);  
-          console.log('headers set', res);
+          // console.log('headers set', res);
 
           res.status(201).json(respObj);
         })
         .catch( err => {
-          console.log('err', err);
+          // console.log('err', err);
           res.status(500).json({message: `Internal server error ${err}`});
         });
     });
