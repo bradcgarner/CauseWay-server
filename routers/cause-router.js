@@ -12,11 +12,6 @@ process.stdout.write('\x1Bc');
 passport.use(jwtStrategy);
 const jwtAuth = passport.authenticate('jwt', { session: false });
 
-// comm test
-causeRouter.get('/testify/', (req, res) => {
-  res.status(200).json({message: 'Good to go'});
-});
-
 // raw test
 causeRouter.get('/raw', (req, res) => {
   console.log(Object.keys(req.query).length !== 0);

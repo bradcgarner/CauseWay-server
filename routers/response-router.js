@@ -24,7 +24,7 @@ responseRouter.post('/', jsonParser, (req, res) => {
   let respPostObj = {};
 
   // check for required fields
-  const reqFields = ['userId', 'idOpportunity'];
+  const reqFields = ['idUser', 'idOpportunity'];
   const missingField = reqFields.filter( field => !(field in req.body));
   if(missingField.length > 0) {
     return res.status(422).json({
@@ -58,7 +58,7 @@ responseRouter.put('/:id', jsonParser, (req, res) => {
   let respPutObj = {};
 
   // check for required fields
-  const reqFields = ['userId', 'idOpportunity', 'notes'];
+  const reqFields = ['idUser', 'idOpportunity', 'notes'];
   const missingField = reqFields.filter( field => !(field in req.body));
   if(missingField.length > 0) {
     return res.status(422).json({

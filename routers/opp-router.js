@@ -50,7 +50,7 @@ oppRouter.post('/', jsonParser, (req, res) => {
   let inCausesArr = (inOppObj.causes.length > 0) ? inOppObj.causes.slice() : [] ;
   console.log('oppRouter',inOppObj,inCausesArr);
   // check for missing fields
-  const reqFields = ['title', 'narrative', 'userId', 'causes'];
+  const reqFields = ['title', 'narrative', 'idUser', 'causes'];
   const missingField = reqFields.find( field => !(field in inOppObj));
   if(missingField) {
     console.log('missingField',missingField);
@@ -127,7 +127,7 @@ oppRouter.put('/:id', jsonParser, (req, res) => {
   let inCausesArr = inOppObj.causes.slice();
 
   // check for missing fields
-  const reqFields = ['title', 'narrative', 'userId', 'causes'];
+  const reqFields = ['title', 'narrative', 'idUser', 'causes'];
   const missingField = reqFields.find( field => !(field in inOppObj));
   if(missingField) {
     return res.status(422).json({
@@ -149,7 +149,7 @@ oppRouter.put('/:id', jsonParser, (req, res) => {
 
     .then( results => {
       return knex('opportunities_causes')
-        .where('id_opp', '=', oppId)
+        .where('id_opportunity', '=', oppId)
         .del()
         .then( () => {
           if(inCausesArr.length > 0) {

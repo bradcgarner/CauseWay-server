@@ -73,7 +73,7 @@ CREATE TABLE users_causes (
 
 CREATE TABLE opportunities_causes (
   id serial primary key,
-  id_opp integer references opportunities on delete cascade,
+  id_opportunity integer references opportunities on delete cascade,
   id_cause integer references causes on delete cascade,
   timestamp_created timestamp default current_timestamp
 );
@@ -167,7 +167,7 @@ VALUES
 (1,2),(1,3),(2,4),(3,5),(3,7),(3,10),(4,9),(1,6);
 
 INSERT into opportunities_causes
-(id_opp, id_cause)
+(id_opportunity, id_cause)
 VALUES
 (1,2),(1,3),(2,1),(2,5),(2,9),(3,1),(3,5),(3,9),(4,1),(4,5),(4,8);
 

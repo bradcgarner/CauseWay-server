@@ -28,14 +28,14 @@ userRouter.get('/list', (req, res) => {
 
 // GET api/users/:id
 userRouter.get('/:id', (req, res) => {
-  const userId = req.params.id;
+  const idUser = req.params.id;
   let respObj = {};
   let extAdminOf = [];
   
-  return helper.buildUser(userId)
+  return helper.buildUser(idUser)
     .then( result => {
       respObj = helper.convertCase(result, 'snakeToCC');
-      return (helper.getExtUserInfo(userId));
+      return (helper.getExtUserInfo(idUser));
     })
     .then( resultObj => {
       respObj = Object.assign( {}, respObj, resultObj);
@@ -118,7 +118,7 @@ userRouter.post('/register', jsonParser, (req, res) => {
 
 // PUT api/users/:id
 userRouter.put('/:id', jsonParser, (req, res) => {
-  const userId = req.params.id;
+  const idUser = req.params.id;
   const knex = require('../db');
   let inUsrObj = Object.assign( {}, req.body);
   if(inUsrObj.id) { delete inUsrObj.id; }
@@ -134,7 +134,7 @@ userRouter.put('/:id', jsonParser, (req, res) => {
   // verify id
   return knex('users')
     .select()
-    .where('id', '=', userId)
+    .where('id', '=', idUser)
     .then( results => {
       if(!results) {
         return Promise.reject({
@@ -168,7 +168,7 @@ userRouter.put('/:id', jsonParser, (req, res) => {
       delete convInUsrObj.causes;
       delete convInUsrObj.skills;
       return knex('users')
-        .where('id', '=', userId)
+        .where('id', '=', idUser)
         .update(convInUsrObj)
         .returning(['id', 'username']);
     })
@@ -176,14 +176,14 @@ userRouter.put('/:id', jsonParser, (req, res) => {
     .then( () => {
       // process links
       return knex('links')
-        .where('id_user', '=', userId)
+        .where('id_user', '=', idUser)
         .del()
         .then( () => {
           if(linksArr.length > 0) {
             linksArr.forEach( linkItem => {
               linkPostArr.push(
                 Object.assign( {}, {
-                  id_user: userId,
+                  id_user: idUser,
                   link_url: linkItem.linkUrl,
                   link_type: linkItem.linkType
                 })
@@ -201,7 +201,7 @@ userRouter.put('/:id', jsonParser, (req, res) => {
     .then( () => {
       // process causes
       return knex('users_causes')
-        .where('id_user', '=', userId)
+        .where('id_user', '=', idUser)
         .del()
         .then( () => {
           if(causesArr.length > 0) {
@@ -218,7 +218,7 @@ userRouter.put('/:id', jsonParser, (req, res) => {
               const causeId = results.filter( item => item.cause === causeItem )[0].id;
               causePostArr.push(
                 Object.assign ( {}, {
-                  id_user: userId,
+                  id_user: idUser,
                   id_cause: causeId
                 })
               );
@@ -235,7 +235,7 @@ userRouter.put('/:id', jsonParser, (req, res) => {
     .then( () => {
       // process skills
       return knex('users_skills')
-        .where('id_user', '=', userId)
+        .where('id_user', '=', idUser)
         .del()
         .then( () => {
           if(skillsArr.length > 0) {
@@ -252,7 +252,7 @@ userRouter.put('/:id', jsonParser, (req, res) => {
               const skillId = results.filter( item => item.skill === skillItem )[0].id;
               skillPostArr.push(
                 Object.assign ( {}, {
-                  id_user: userId,
+                  id_user: idUser,
                   id_skill: skillId
                 })
               );
@@ -266,7 +266,7 @@ userRouter.put('/:id', jsonParser, (req, res) => {
         });
     })
     .then( () => {
-      return helper.buildUser(userId);
+      return helper.buildUser(idUser);
     })
     .then( retObj => {
       let usrObjCC = helper.convertCase(retObj, 'snakeToCC');
