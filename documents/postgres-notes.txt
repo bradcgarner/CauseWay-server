@@ -1,0 +1,13 @@
+CLI
+credentials below are from heroku postgresql dashboard under Brad's account
+
+enter  shell
+heroku pg:psql postgresql-shallow-31612 --app causeway-app-server
+
+list all databases: there are a lot; don't know who they belong to
+\l
+
+select my database
+\c d639ngth204m9l
+
+then you can type SQL statements...
