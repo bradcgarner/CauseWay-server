@@ -54,6 +54,7 @@ userRouter.post('/register', jsonParser, (req, res) => {
 
   // check for missing username or passwd
   if(missingField.length > 0) {
+    console.log('missingField',missingField);
     return res.status(422).json({
       code: 422,
       reason: 'ValidationError',
