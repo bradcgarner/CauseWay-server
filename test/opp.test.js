@@ -77,14 +77,14 @@ describe('opp', function() {
   // describe('api/opportunities POST new opportunity', function() {
   //   let testOpp = testData.testOrgOpp;
 
-  //   it('should reject a post with missing userId', function() {
+  //   it('should reject a post with missing idUser', function() {
   //     return testF.getFocusOrg()
   //       .then( result => {
   //         testOpp = Object.assign( {}, testOpp, {
-  //           userId: result.focus_org_id
+  //           idUser: result.focus_org_id
   //         });
   //         let failedTestOpp = Object.assign( {}, testOpp);
-  //         delete failedTestOpp.userId;
+  //         delete failedTestOpp.idUser;
   //         return chai.request(app)
   //           .post('/api/opportunities')
   //           .send(failedTestOpp)
@@ -97,7 +97,7 @@ describe('opp', function() {
   //             }
   //             const res = err.response;
   //             // expect(res.body.reason).to.equal('ValidationError');
-  //             // expect(res.body.location).to.equal('userId');
+  //             // expect(res.body.location).to.equal('idUser');
   //           });
   //       });
   //   });
@@ -134,7 +134,7 @@ describe('opp', function() {
   //       })
   //       .then( results => {
   //         expect(results.length).to.equal(1);
-  //         expect(results[0].id_user).to.equal(testOpp.userId);
+  //         expect(results[0].id_user).to.equal(testOpp.idUser);
   //         expect(results[0].offer).to.equal(false);
   //         expect(results[0].title).to.equal(testOpp.title);
   //         expect(results[0].narrative).to.equal(testOpp.narrative);
