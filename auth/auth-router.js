@@ -72,9 +72,12 @@ authRouter.post('/login', localAuth, (req, res) => {
           res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
           res.setHeader('Pragma', 'no-cache');
           res.setHeader('Expires', 0);  
+          console.log('headers set', res);
+
           res.status(201).json(respObj);
         })
         .catch( err => {
+          console.log('err', err);
           res.status(500).json({message: `Internal server error ${err}`});
         });
     });
