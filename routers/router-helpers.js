@@ -546,7 +546,7 @@ const responsesUsersKeys = [
 const responsesOpportunitiesKeys = [
   'responses.id',
   'responses.id_user as userId',
-  'responses.id_opp as idOpportunity',
+  'responses.id_opportunity as idOpportunity',
   'notes',
   'response_status as responseStatus',
   'responses.timestamp_status_change as timestampStatusChange',
