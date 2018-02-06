@@ -61,6 +61,24 @@ const keys = {
     'organization',
     'availability',
   ],
+  usersKeysAppendToOpportunityRaw: [
+    // this is a select of table opportunities, but ONLY getting user info to hydrate into opportunity
+    // will be pushed into nested array as follows:
+    // fields on this list will drop leading 'users.'
+    // array will be split on ' as '
+    // fields starting with 'users_' will be pushed, dropping 'user_'
+    'users.username',
+    'users.user_type',
+    'users.location_city as users_location_city',
+    'users.location_state as users_location_state',
+    'users.location_country as users_location_country',
+    'users.bio',
+    'users.first_name',
+    'users.last_name',
+    'users.logo',
+    'users.organization',
+    'users.availability as users_availability', // prevent keyword fault
+  ],
   usersKeysAppendToOpportunity: [
     // this is a select of table opportunities, but ONLY getting user info to hydrate into opportunity
     'users.username',
@@ -96,6 +114,33 @@ const keys = {
     idUserReceiving: 'id_user_receiving',
     organization: null
   },
+  opportunitiesKeysRaw: [
+    'id',
+    'id_user',
+    'opportunity_type',
+    'offer',
+    'title',
+    'narrative',
+    'timestamp_start',
+    'timestamp_end',
+    'location_city',
+    'location_state',
+    'location_country',
+    'link'
+  ],
+  opportunitiesKeysInsertCC: [
+    'idUser',
+    'opportunityType',
+    'offer',
+    'title',
+    'narrative',
+    'timestampStart',
+    'timestampEnd',
+    'locationCity',
+    'locationState',
+    'locationCountry',
+    'link'
+  ],
   opportunitiesKeys: [
     'id',
     'opportunity_type as opportunityType',

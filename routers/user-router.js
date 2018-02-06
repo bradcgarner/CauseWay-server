@@ -7,7 +7,7 @@ const userRouter = express.Router();
 const bodyParser = require('body-parser');
 const jsonParser = bodyParser.json();
 const { hashPassword } = require('./auth/bcrypt');
-const { helper, convertCase } = require('./router-helpers');
+const { helper, convertCase } = require('./helper');
 const { keys } = require('./helper-keys');
 
 process.stdout.write('\x1Bc');
@@ -22,7 +22,7 @@ userRouter.get('/', (req, res) => {
   if(Object.keys(req.query).length > 0) {
     queryObject = req.query;
   }
-  return helper.buildListOfUsers(queryObject)
+  return helper.buildUsersList(queryObject)
     .then(usersList => {
       console.log(' @@@@@@@@@ ', usersList);
       res.json(usersList);

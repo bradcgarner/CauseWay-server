@@ -2,7 +2,7 @@
 
 const express = require('express');
 const authRouter = express.Router();
-const { helper, convertCase } = require('../router-helpers');
+const { helper, convertCase } = require('../helper');
 const passport = require('passport');
 const jwt = require('jsonwebtoken');
 const { localStrategy } = require('./local-strategy');

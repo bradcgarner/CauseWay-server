@@ -4,7 +4,7 @@ const express = require('express');
 const passport = require('passport');
 const { jwtStrategy } = require('./auth/jwt-strategy');
 const oppRouter = express.Router();
-const { helper } = require('./router-helpers');
+const { helper, convertCase } = require('./helper');
 const bodyParser = require('body-parser');
 const jsonParser = bodyParser.json();
 
@@ -16,10 +16,7 @@ const jwtAuth = passport.authenticate('jwt', { session: false });
 //GET api/opportunities/
 oppRouter.get('/', (req, res) => {
   // check for query parameters
-  let queryObject = {};
-  if(Object.keys(req.query).length > 0) {
-    queryObject = req.query;
-  }
+  const queryObject = Object.keys(req.query).length > 0 ? req.query : {} ;
   return helper.buildOppList(queryObject)
     .then( oppList => {
       res.json(oppList);
@@ -31,7 +28,6 @@ oppRouter.get('/', (req, res) => {
 
 //GET api/opportunities/:id
 oppRouter.get('/:id', (req, res) => {
-  
   return helper.buildOpp(req.params.id)
     .then( results => {
       res.json(results);
@@ -44,13 +40,14 @@ oppRouter.get('/:id', (req, res) => {
 // POST api/opportunities
 oppRouter.post('/', jsonParser, (req, res) => {
   let oppId;
-  let inOppObj = req.body;
+  let oppFromClient = req.body;
   let retObj = {};
-  let inCausesArr = (inOppObj.causes.length > 0) ? inOppObj.causes.slice() : [] ;
-  console.log('oppRouter',inOppObj,inCausesArr);
+  let inCausesArr = !Array.isArray(oppFromClient.causes) ? [] :
+    (oppFromClient.causes.length > 0) ? oppFromClient.causes.slice() : [] ;
+  console.log('oppFromClient',oppFromClient,inCausesArr);
   // check for missing fields
-  const reqFields = ['title', 'narrative', 'idUser', 'causes'];
-  const missingField = reqFields.find( field => !(field in inOppObj));
+  const reqFields = ['title', 'narrative', 'idUser', 'causes', 'timestampStart', 'timestampEnd'];
+  const missingField = reqFields.find( field => !(field in oppFromClient));
   if(missingField) {
     console.log('missingField',missingField);
 
@@ -62,17 +59,18 @@ oppRouter.post('/', jsonParser, (req, res) => {
     });
   }
   // post base opportunity info - get id'
-  const postOppObj = helper.buildOppBase(inOppObj);
-  console.log('postOppObj to insert',postOppObj);
+  const postOppObj = convertCase(oppFromClient, 'ccToSnake', 'opportunitiesKeysInsertCC');
+  console.log('postOppObj to insert', postOppObj);
+
   const knex = require('../db');
 
   return knex('opportunities')
     .insert(postOppObj)
     .returning(['id'])
-    .then( result => {
-      console.log('after inserting',result);
+    .then( idReturned => {
+      console.log('idReturned',idReturned);
 
-      oppId = result[0].id;
+      oppId = idReturned[0].id;
       console.log('oppId',oppId);
 
       if(inCausesArr.length > 0) {
@@ -119,15 +117,15 @@ oppRouter.post('/', jsonParser, (req, res) => {
 
 // PUT api/opportunities/:id
 oppRouter.put('/:id', jsonParser, (req, res) => {
-  let inOppObj = req.body;
-  if(inOppObj.id) { delete inOppObj.id; } 
+  let oppFromClient = req.body;
+  if(oppFromClient.id) { delete oppFromClient.id; } 
   let oppId = req.params.id;
   let retObj = {};
-  let inCausesArr = inOppObj.causes.slice();
+  let inCausesArr = oppFromClient.causes.slice();
 
   // check for missing fields
   const reqFields = ['title', 'narrative', 'idUser', 'causes'];
-  const missingField = reqFields.find( field => !(field in inOppObj));
+  const missingField = reqFields.find( field => !(field in oppFromClient));
   if(missingField) {
     return res.status(422).json({
       code: 422,
@@ -138,7 +136,7 @@ oppRouter.put('/:id', jsonParser, (req, res) => {
   }
 
   // update base opportunity info'
-  const postOppObj = helper.buildOppBase(inOppObj);
+  const postOppObj = helper.convertCase(oppFromClient, 'ccToSnake', 'opportunitiesKeysInsertCC');
   const knex = require('../db');
 
   return knex('opportunities')
@@ -178,6 +176,5 @@ oppRouter.put('/:id', jsonParser, (req, res) => {
         });
     });
 });
-
 
 module.exports = { oppRouter };

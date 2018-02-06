@@ -6,7 +6,7 @@ const { jwtStrategy } = require('./auth/jwt-strategy');
 const responseRouter = express.Router();
 const bodyParser = require('body-parser');
 const jsonParser = bodyParser.json();
-const { helper, convertCase } = require('./router-helpers');
+const { helper, convertCase } = require('./helper');
 
 process.stdout.write('\x1Bc');
 

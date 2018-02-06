@@ -4,7 +4,7 @@ const express = require('express');
 const adminRouter = express.Router();
 const bodyParser = require('body-parser');
 const jsonParser = bodyParser.json();
-const { helper } = require('./router-helpers');
+const { helper } = require('./helper');
 
 process.stdout.write('\x1Bc');
 

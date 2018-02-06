@@ -1,25 +1,36 @@
 'use strict';
 const { keys } = require('./helper-keys');
-const { sql } = require('./helper-sql');
+const { usersListSelectStatement, oppsListSelectStatement } = require('./helper-sql');
+
+const rawFromQuery = (queryObjectCC = {}, table, selectStatement) => {
+  const select = selectStatement ? selectStatement : 'SELECT *' ;
+  let rawSql = `${select} FROM ${table}`;
+  if(Object.keys(queryObjectCC).length > 0) {
+
+    const queryObject = convertCase(queryObjectCC, 'ccToSnake');
+    const arrayOfQueries = Object.keys(queryObject).map( key => {
+      return `LOWER(${key}) LIKE LOWER('%${queryObject[key]}%')`;
+    });
+    rawSql = arrayOfQueries.length > 1 ?
+      `${select} FROM ${table} WHERE (${arrayOfQueries.join(') AND (')})`
+      : `${select} FROM ${table} WHERE ${arrayOfQueries[0]}` ;
+  }
+  return rawSql;
+};
 
 let helper = {}; 
 
 helper.buildUsersList = function(queryObject) {
   const table = 'users';
-  const selectStatement = sql.usersListSelectStatement();
-  const rawSql = sql.rawFromQuery(queryObject, table, selectStatement);
-  console.log('rawSql', rawSql);
+  const selectStatement = usersListSelectStatement();
+  const rawSql = rawFromQuery(queryObject, table, selectStatement);
 
   const knex = require('../db');
   return knex
     .raw(rawSql)
     .then( users => {
       const usersList = users.rows;
-      console.log('~~~~~~~~');
-      console.log('users.rows[0]', usersList);
-      console.log('~~~~~~~~');
       const usersListCauses = pushPrimitiveRepsIntoArray(usersList, 'causes');
-      console.log('causes after new array', usersListCauses);
       const usersListSkills = pushPrimitiveRepsIntoArray(usersListCauses, 'skills');
       const usersListLinks = pushLinksIntoArray(usersListSkills);
       return usersListLinks.map(user=> convertCase(user, 'snakeToCC'));
@@ -188,61 +199,59 @@ helper.getExtUserInfo = function(idUser) {
 
 helper.buildOppList = function(queryObject) {
   const table = 'opportunities';
-  const rawSql = sql.rawFromQuery(queryObject, table);
-  console.log('rawSql', rawSql);
-  let oppsArray;
-
+  const selectStatement = oppsListSelectStatement();
+  const rawSql = rawFromQuery(queryObject, table, selectStatement);
   const knex = require('../db');
   return knex
     .raw(rawSql) 
     .then( opps => {
-      console.log('opportunities', opps.rows[0]);
-      console.log('~~~~~~~~');
-      oppsArray = opps.rows.map(opp=> convertCase(opp, 'snakeToCC'));
-      console.log('oppsArray', oppsArray[0]);
-      console.log('xxxxxxx');
+      const oppsList = opps.rows.map(opp=> convertCase(opp, 'snakeToCC'));
 
-      const causePromisesArray = oppsArray.map((opp,index)=>{
-        return knex('opportunities_causes')
-          .join('causes', 'opportunities_causes.id_cause', '=', 'causes.id')
-          .select('causes.cause')
-          .where('opportunities_causes.id_opportunity', '=', opp.id)
-          .orderBy('causes.cause')
-          .then( causes => {
-            oppsArray[index].causes = causes.map( cause => cause.cause);
-          });
-      });
-      return Promise.all(causePromisesArray);
-    })
+      const oppsListCauses = pushPrimitiveRepsIntoArray(oppsList, 'causes');
+      const oppsListUsers = pushNestedKeysIntoArray(oppsListCauses, 'users', keys.usersKeysAppendToOpportunityRaw);
+        
+      // START DELETING !!!!!!!!!!!
+      //   const causePromisesArray = oppsList.map((opp,index)=>{
+      //     return knex('opportunities_causes')
+      //       .join('causes', 'opportunities_causes.id_cause', '=', 'causes.id')
+      //       .select('causes.cause')
+      //       .where('opportunities_causes.id_opportunity', '=', opp.id)
+      //       .orderBy('causes.cause')
+      //       .then( causes => {
+      //         oppsList[index].causes = causes.map( cause => cause.cause);
+      //       });
+      //   });
+      //   return Promise.all(causePromisesArray);
+      // })
 
-    .then( () => {
-      // console.log('causes should be in array now', oppsArray[0]);
+      // .then( () => {
+      // console.log('causes should be in array now', oppsList[0]);
       // console.log('yyyyyyy');
 
-      const usersPromisesArray = oppsArray.map((opp,index)=>{
-        return knex('opportunities')
-          .join('users', 'opportunities.id_user', '=', 'users.id')
-          .select(keys.usersKeysAppendToOpportunity)
-          .where('opportunities.id', '=', opp.id)
-          .then( user => {
-            oppsArray[index].organization = user[0].organization;
-            oppsArray[index].logo = oppsArray[index].logo || user[0].logo;
-            oppsArray[index].user = user[0];
-          });
-      });
-      return Promise.all(usersPromisesArray);
-    })
-    .then(()=>{
-      return oppsArray.sort((a,b)=>{
+      // const usersPromisesArray = oppsList.map((opp,index)=>{
+      //   return knex('opportunities')
+      //     .join('users', 'opportunities.id_user', '=', 'users.id')
+      //     .select(keys.usersKeysAppendToOpportunity)
+      //     .where('opportunities.id', '=', opp.id)
+      //     .then( user => {
+      //       oppsList[index].organization = user[0].organization;
+      //       oppsList[index].logo = oppsList[index].logo || user[0].logo;
+      //       oppsList[index].user = user[0];
+      //     });
+      // });
+      // return Promise.all(usersPromisesArray);
+      // })
+      // .then(oppsList=>{
+
+      return oppsListUsers.sort((a,b)=>{ // sort is not immutable
         return a.timestamp_start < b.timestamp_start ? -1 :
-          a.timestamp_start > b.timestamp_start ? 1 :
-            0;
+          a.timestamp_start > b.timestamp_start ? 1 : 0;
       });      
     });
 };
 
 helper.buildOpp = function(inOppId) {
-  console.log('start built opp',inOppId);
+  // console.log('start built opp',inOppId);
   let causeArr = [];
   let respArr = [];
   let oppObj = {};
@@ -256,10 +265,10 @@ helper.buildOpp = function(inOppId) {
     .where('opportunities_causes.id_opportunity', '=', inOppId)
     .orderBy('causes.cause')
     .then( results => {
-      console.log('opportunities_causes',results);
+      // console.log('opportunities_causes',results);
 
       causeArr = results.map( cause => cause.cause);
-      console.log('causeArr',causeArr);
+      // console.log('causeArr',causeArr);
 
       // get responses
       return knex('responses')
@@ -269,7 +278,7 @@ helper.buildOpp = function(inOppId) {
         .debug(false);
     })
     .then( responses => {
-      console.log('responses',responses);
+      // console.log('responses',responses);
 
       respArr = responses.slice();
       // get opp info
@@ -280,22 +289,22 @@ helper.buildOpp = function(inOppId) {
         .debug(false);
     })
     .then( opportunities => {
-      console.log('opportunities',opportunities);
+      // console.log('opportunities',opportunities);
 
       oppObj = convertCase(opportunities[0], 'snakeToCC');
-      console.log('oppObj',oppObj);
+      // console.log('oppObj',oppObj);
 
       return this.getOrgName(oppObj.idUser);
     })
     .then( result => {
-      console.log('opp converted case',result);
+      // console.log('opp converted case',result);
 
       opp = Object.assign( {}, oppObj, {
         organization: result,
         causes: causeArr,
         responses: respArr
       });
-      console.log('opp with causes and responses',opp);
+      // console.log('opp with causes and responses',opp);
 
       return opp;
     });
@@ -309,44 +318,6 @@ helper.getOppTitle = function(oppId) {
     .then( result => {
       return (result[0].title);
     });
-};
-
-helper.buildOppBase = function(inOppObj) {
-  console.log('buildOppBase',inOppObj);
-
-  const {id,
-    timestampCreated, 
-    opportunityType,
-    offer, 
-    title,
-    narrative,
-    timestampStart,
-    timestampEnd,
-    locationCity, 
-    locationState,
-    locationCountry,
-    idUser,
-    link
-  } = inOppObj;
-  const opportunity = {
-    id,
-    timestampCreated, 
-    opportunityType,
-    offer, 
-    title,
-    narrative,
-    timestampStart,
-    timestampEnd,
-    locationCity, 
-    locationState,
-    locationCountry,
-    idUser,
-    link
-  };
-  let retBaseObj = convertCase(opportunity, 'ccToSnake');
-  console.log('retBaseObj',retBaseObj);
-
-  return retBaseObj;
 };
 
 helper.buildOppCausesArr = function(oppId, inCausesArr) {
@@ -410,6 +381,30 @@ helper.getOrgName = function(idUser) {
 
 // @@@@@@@@@@@@@ COMPACTING JOIN ARRAYS @@@@@@@@@@@@@@
 
+const pushNestedKeysIntoArray = (object, prefix, keys) => {
+  // prefix: e.g. 'users'
+  // input: {users.name: x, users.id: y} // output: users: {name: x, id: y}
+  if (Array.isArray(object)) {
+    return object.map(singleObject => pushNestedKeysIntoArray(singleObject, prefix, keys));
+  } else {
+    const preformattedKeys = keys.map(key=>key.slice(prefix.length+1,key.length));
+    const formattedKeys = preformattedKeys.map(key=>{
+      return key.includes(' as ') ? key.slice(key.indexOf(' as ')+4,key.length) : key ;
+    });
+    const newObject = Object.assign({}, object);
+    const newArray = [];
+    let rep = 0;
+    for (let key in keys) {
+      const correctedKey = key.slice(0,prefix.length+1) === `${prefix}_` ? key.slice(prefix.length+1,key.length) : key ;
+      if (object[`${key}`]) {
+        newArray.push(object[correctedKey]);
+      }
+    }
+    newObject[prefix] = newArray;
+    return newObject;
+  }
+};
+
 const pushPrimitiveRepsIntoArray = (object, field) => {
   // input: {causes1: x, causes2: y} // output: causes: [x,y]
   if (Array.isArray(object)) {
@@ -429,6 +424,7 @@ const pushPrimitiveRepsIntoArray = (object, field) => {
 
 const pushLinksIntoArray = (object) => {
   // input: {causes1: x, causes2: y} // output: causes: [x,y]
+  // console.log('object',object);
   if (Array.isArray(object)) {
     return object.map(singleObject => pushLinksIntoArray(singleObject));
   } else {
@@ -447,7 +443,8 @@ const pushLinksIntoArray = (object) => {
   }
 };
 
-const convertCase = function(inputObject, mode, limitingList) {
+function convertCase(inputObject, mode, limitingList) {
+  // console.log('inputObject', inputObject);
   const caseObject = {};
   const conversionTable = mode === 'ccToSnake' ? keys.ccToSnake : keys.snakeToCC ;
 
@@ -461,15 +458,15 @@ const convertCase = function(inputObject, mode, limitingList) {
 
   if(keys[limitingList]) {
     for (let key in caseObject) {
-      console.log('key', key);
+      // console.log('key', key);
       if(!(keys[limitingList].includes(key))) {
-        console.log('    delete key', key);
+        // console.log('    delete key', key);
         delete caseObject[key];
       }
     }
   }
 
   return caseObject;
-};
+}
 
 module.exports = { helper, convertCase };
