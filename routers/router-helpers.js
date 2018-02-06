@@ -1,74 +1,21 @@
 'use strict';
 
-let helper = {};
+let helper = {}; 
 
-helper.buildListOfUsers = function() {
-  let arrayOfUsers = [];
-  let allCauses = [];
-  let allLinks = [];
-  let allSkills = [];
+helper.buildUsersList = function(queryObject) {
+  const table = 'users';
+  const selectStatement = formatUsersListSelectStatement();
+  const rawSql = buildRawSqlFromQuery(queryObject, table, selectStatement);
+  console.log('rawSql', rawSql);
 
   const knex = require('../db');
-
-  // get user causes
-  return knex('users_causes')
-    .join('causes', 'users_causes.id_cause', '=', 'causes.id')
-    .select('users_causes.id_user', 'causes.id', 'causes.cause')
-    .orderBy('users_causes.id_user')
-    .then(causes => allCauses = causes.slice())
-    .then( () => {
-
-      // get user links
-      return knex('links')
-        .select('id_user', 'id', 'link_type as linkType', 'link_url as linkUrl')
-        .orderBy('id_user');
-    })
-    .then( links => allLinks = links.slice())
-
-    .then( () => {
-      // get user skills
-      return knex('users_skills')
-        .join('skills', 'users_skills.id_skill', '=', 'skills.id')
-        .select('users_skills.id_user', 'skills.id', 'skills.skill')
-        .orderBy('users_skills.id_user');
-    })
-    .then( skills => allSkills = skills.slice())
-
-    // get users
-    .then( () => {
-      return knex('users')
-        .select(usersKeys)
-        .orderBy('id');
-    })
+  return knex
+    .raw(rawSql)
     .then( users => {
-      users.forEach( user => {
-
-        let userCauses = allCauses
-          .filter( cause => cause.id_user === user.id)
-          .map( cause => cause.cause);
-
-        let userLinks = allLinks
-          .filter( link => link.id_user === user.id)
-          .map( link => Object.assign( {}, {
-            id: link.id,
-            linkType: link.linkType,
-            linkUrl: link.linkUrl
-          }));
-
-        let userSkills = allSkills
-          .filter( skill => skill.id_user === user.id)
-          .map( skill => skill.skill);
-          
-        let mergedUser = Object.assign( {}, user,
-          {
-            causes: userCauses.slice(),
-            links: userLinks.slice(),
-            skills: userSkills.slice()
-          }
-        );
-        arrayOfUsers.push(mergedUser);
-      });
-      return arrayOfUsers;
+      console.log('~~~~~~~~');
+      console.log('users.rows[0]', users.rows[0]);
+      console.log('~~~~~~~~');
+      return users.rows.map(user=> helper.convertCase(user, 'snakeToCC'));
     });
 };
 
@@ -232,30 +179,15 @@ helper.getExtUserInfo = function(idUser) {
     });
 };
 
-helper.buildRawSQLFromQuery = function(queryObjectCC) {
-  let rawSQL = 'SELECT * FROM opportunities';
-  if(Object.keys(queryObjectCC).length > 0) {
-    const queryObject = this.convertCase(queryObjectCC, 'ccToSnake');
-    const arrayOfQueries = Object.keys(queryObject).map( key => {
-      return `LOWER(${key}) LIKE LOWER('%${queryObject[key]}%')`;
-    });
-    rawSQL = arrayOfQueries.length > 1 ?
-      `SELECT * FROM opportunities WHERE (${arrayOfQueries.join(') AND (')})`
-      : `SELECT * FROM opportunities WHERE ${arrayOfQueries[0]}` ;
-    console.log('rawSQL',rawSQL);
-  }
-  return rawSQL;
-};
-
 helper.buildOppList = function(queryObject) {
-  console.log('start', queryObject);
-  const rawSQL = this.buildRawSQLFromQuery(queryObject);
-  console.log('rawSQL', rawSQL);
+  const table = 'opportunities';
+  const rawSql = buildRawSqlFromQuery(queryObject, table);
+  console.log('rawSql', rawSql);
   let oppsArray;
 
   const knex = require('../db');
   return knex
-    .raw(rawSQL) 
+    .raw(rawSql) 
     .then( opps => {
       console.log('opportunities', opps.rows[0]);
       console.log('~~~~~~~~');
@@ -277,8 +209,8 @@ helper.buildOppList = function(queryObject) {
     })
 
     .then( () => {
-      console.log('causes should be in array now', oppsArray[0]);
-      console.log('yyyyyyy');
+      // console.log('causes should be in array now', oppsArray[0]);
+      // console.log('yyyyyyy');
 
       const usersPromisesArray = oppsArray.map((opp,index)=>{
         return knex('opportunities')
@@ -307,7 +239,7 @@ helper.buildOppList = function(queryObject) {
 };
 
 helper.buildOpp = function(inOppId) {
-  console.log('start built opp',inOppId)
+  console.log('start built opp',inOppId);
   let causeArr = [];
   let respArr = [];
   let oppObj = {};
@@ -321,10 +253,10 @@ helper.buildOpp = function(inOppId) {
     .where('opportunities_causes.id_opportunity', '=', inOppId)
     .orderBy('causes.cause')
     .then( results => {
-      console.log('opportunities_causes',results)
+      console.log('opportunities_causes',results);
 
       causeArr = results.map( cause => cause.cause);
-      console.log('causeArr',causeArr)
+      console.log('causeArr',causeArr);
 
       // get responses
       return knex('responses')
@@ -334,7 +266,7 @@ helper.buildOpp = function(inOppId) {
         .debug(false);
     })
     .then( responses => {
-      console.log('responses',responses)
+      console.log('responses',responses);
 
       respArr = responses.slice();
       // get opp info
@@ -345,22 +277,22 @@ helper.buildOpp = function(inOppId) {
         .debug(false);
     })
     .then( opportunities => {
-      console.log('opportunities',opportunities)
+      console.log('opportunities',opportunities);
 
       oppObj = helper.convertCase(opportunities[0], 'snakeToCC');
-      console.log('oppObj',oppObj)
+      console.log('oppObj',oppObj);
 
-      return this.getOrg(oppObj.idUser);
+      return this.getOrgName(oppObj.idUser);
     })
     .then( result => {
-      console.log('opp converted case',result)
+      console.log('opp converted case',result);
 
       opp = Object.assign( {}, oppObj, {
         organization: result,
         causes: causeArr,
         responses: respArr
       });
-      console.log('opp with causes and responses',opp)
+      console.log('opp with causes and responses',opp);
 
       return opp;
     });
@@ -376,7 +308,7 @@ helper.buildResponse = function(inRespId) {
     .select(responsesUsersKeys)
     .then( result => {
       response = this.convertCase(result[0], 'snakeToCC');
-      return this.getTitle(response.idOpportunity)
+      return this.getOppTitle(response.idOpportunity)
         .then( title => {
           response = Object.assign( {}, response, {
             title: title
@@ -386,7 +318,7 @@ helper.buildResponse = function(inRespId) {
     });
 };
 
-helper.getOrg = function(idUser) {
+helper.getOrgName = function(idUser) {
   const knex = require('../db');
   return knex('users')
     .select('organization')
@@ -396,7 +328,7 @@ helper.getOrg = function(idUser) {
     });
 };
 
-helper.getTitle = function(oppId) {
+helper.getOppTitle = function(oppId) {
   const knex = require('../db');
   return knex('opportunities')
     .select('title')
@@ -472,6 +404,139 @@ helper.buildOppCausesArr = function(oppId, inCausesArr) {
     });
 };
 
+// @@@@@@@@@@@@@@@@@@ SQL @@@@@@@@@@@@@@@@@@@@@@@@
+
+const format1ManyQuery3Tables = (t1, f1, f12, t2, t3, f3, f32, f3get, offsetIndex) => {
+  return `(SELECT ${t3}.${f3get} FROM ${t3} WHERE ${t3}.${f3} = (SELECT ${t3}.${f3} FROM ${t2} JOIN ${t3} ON ${t2}.${f32} = ${t3}.${f3} WHERE ${t2}.${f12} = ${t1}.${f1} ORDER by ${t2}.${f32} LIMIT 1 OFFSET ${offsetIndex})) as ${t3}${offsetIndex}`;
+};
+
+const format1ManyQuery2Tables = (t1, f1, f12, t2, f2, f22, f2get, offsetIndex) => {
+  return `(SELECT ${t2}.${f2get} FROM ${t2} WHERE ${t2}.${f12} = ${t1}.${f1} ORDER by ${t2}.${f22} LIMIT 1 OFFSET ${offsetIndex}) as ${t2}${offsetIndex}`;
+};
+
+const format1ManyQueryArray3Tables = (t1, f1, f12, t2, t3, f3, f32, f3get, reps) => {
+  const queryArray = [];
+  for (let i=0; i<reps; i++) {
+    queryArray.push(format1ManyQuery3Tables (t1, f1, f12, t2, t3, f3, f32, f3get, i));
+  }
+  return queryArray;
+};
+
+const format1ManyQueryArray2Tables = (t1, f1, f12, t2, f2, f22, f2get, reps) => {
+  const queryArray = [];
+  for (let i=0; i<reps; i++) {
+    queryArray.push(format1ManyQuery2Tables (t1, f1, f12, t2, f2, f22, f2get, i));
+  }
+  return queryArray;
+};
+
+const format1ManyQueryUsersToLinkUrl = () => {
+  const t1    = 'users';
+  const f1    = 'id';
+  const f12   = 'id_user';
+  const t2    = 'links';
+  const f2    = 'id';
+  const f22   = 'link_url';
+  const f2get = 'link_url';
+  const reps  = 4;
+  return format1ManyQueryArray2Tables(t1, f1, f12, t2, f2, f22, f2get, reps);
+};
+  
+const format1ManyQueryUsersToLinkType = () => {
+  const t1    = 'users';
+  const f1    = 'id';
+  const f12   = 'id_user';
+  const t2    = 'links';
+  const f2    = 'id';
+  const f22   = 'link_url';
+  const f2get = 'link_type';
+  const reps  = 4;
+  return format1ManyQueryArray2Tables(t1, f1, f12, t2, f2, f22, f2get, reps);
+};
+  
+const format1ManyQueryUsersToCauses = () => {
+  const t1    = 'users';
+  const f1    = 'id';
+  const f12   = 'id_user';
+  const t2    = 'users_causes'  ;
+  const t3    = 'causes' ;
+  const f3    = 'id'  ;
+  const f32   = 'id_cause';
+  const f3get = 'cause';
+  const reps  = 4;
+  return format1ManyQueryArray3Tables(t1, f1, f12, t2, t3, f3, f32, f3get, reps);
+};
+
+const format1ManyQueryUsersToSkills = () => {
+  const t1    = 'users';
+  const f1    = 'id';
+  const f12   = 'id_user';
+  const t2    = 'users_skills'  ;
+  const t3    = 'skills' ;
+  const f3    = 'id'  ;
+  const f32   = 'id_skill';
+  const f3get = 'skill';
+  const reps  = 4;
+  return format1ManyQueryArray3Tables(t1, f1, f12, t2, t3, f3, f32, f3get, reps);
+};
+
+const formatUsersListSelectStatement = function() {
+  // output 'SELECT [all users field], (SELECT complex join) as x1, (SELECT complex join) as y1'
+  const users = usersKeysRaw.map(key => `users.${key}`);
+  const linksType = format1ManyQueryUsersToLinkType();
+  const linksUrl = format1ManyQueryUsersToLinkUrl();
+  const causes = format1ManyQueryUsersToCauses();
+  const skills = format1ManyQueryUsersToSkills();
+  return `SELECT ${users.join(', ')}, ${linksType.join(', ')}, ${linksUrl.join(', ')}, ${causes.join(', ')}, ${skills.join(', ')}`;
+};
+
+const buildRawSqlFromQuery = function(queryObjectCC = {}, table, selectStatement ) {
+  const select = selectStatement ? selectStatement : 'SELECT *' ;
+  let rawSql = `${select} FROM ${table}`;
+  if(Object.keys(queryObjectCC).length > 0) {
+    const queryObject = this.convertCase(queryObjectCC, 'ccToSnake');
+    const arrayOfQueries = Object.keys(queryObject).map( key => {
+      return `LOWER(${key}) LIKE LOWER('%${queryObject[key]}%')`;
+    });
+    rawSql = arrayOfQueries.length > 1 ?
+      `${select} FROM ${table} WHERE (${arrayOfQueries.join(') AND (')})`
+      : `${select} FROM ${table} WHERE ${arrayOfQueries[0]}` ;
+  }
+  return rawSql;
+};
+
+// @@@@@@@@@@@@@@@@@@@@@@@@@ KEYS @@@@@@@@@@@@@@@@@@@@@@@@
+
+const linksKeys = [
+  'id',
+  'id_user',
+  'link_type',
+  'link_url',
+  'timestamp_created',
+];
+const causesKeys = [
+  'id',
+  'cause',
+];
+const skillsKeys = [
+  'id',
+  'skill',
+];
+const usersKeysRaw = [
+  'id',
+  'timestamp_created',
+  'username',
+  'user_type',
+  'location_city',
+  'location_state',
+  'location_country',
+  'bio',
+  'first_name',
+  'last_name',
+  'logo',
+  'organization',
+  'availability',
+];
 const usersKeys = [
   'id',
   'timestamp_created as timestampCreated',
@@ -627,17 +692,17 @@ const ccToSnake = {
 };
 
 helper.convertCase = function(inputObject, mode) {
-
   const outputObject = {};
-  const conversionTable = mode === 'ccToSnake' ? ccToSnake : snakeToCC;
+  const conversionTable = mode === 'ccToSnake' ? ccToSnake : snakeToCC ;
 
-  Object.keys(inputObject).forEach ( key => {
+  Object.keys(inputObject).forEach(key => {
     if(conversionTable[key]) {
       outputObject[conversionTable[key]] = inputObject[key];
     } else {
       outputObject[key] = inputObject[key];
     }
   });
+  
   return outputObject;
 };
 

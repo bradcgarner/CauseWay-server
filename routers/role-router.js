@@ -16,10 +16,12 @@ const jwtAuth = passport.authenticate('jwt', { session: false });
 
 // POST api/roles
 roleRouter.post('/', jsonParser, (req, res) => {
+  console.log(req.body);
   const knex = require('../db');
   let retObj = {};
   let orgName;
   let rolePostObj = epDbHelp.scrubFields(req.body, 'roles');
+  console.log('rolePostObj',rolePostObj);
 
   // validate capability
   const capabilityOpts = ['admin', 'following', 'delete'];
@@ -33,8 +35,11 @@ roleRouter.post('/', jsonParser, (req, res) => {
 
   let orgId = rolePostObj.capabilities === 'admin' ? 
     rolePostObj.id_user_adding : rolePostObj.id_user_receiving;
+  console.log('orgId', orgId);
+
   return helper.getOrg(orgId)
     .then( org => {
+      console.log('org', org);
       orgName = org;
       return knex('roles')
         .insert(rolePostObj)
@@ -44,8 +49,9 @@ roleRouter.post('/', jsonParser, (req, res) => {
           'id_user_receiving as idUserReceiving',
           'capabilities']);
     })
-    .then( result => {
-      retObj = result[0];
+    .then( roleInserted => {
+      console.log('roleInserted', roleInserted);
+      retObj = roleInserted[0];
       retObj.organization = orgName;
       res.json(retObj);
     })

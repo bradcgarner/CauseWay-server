@@ -16,10 +16,15 @@ const jwtAuth = passport.authenticate('jwt', { session: false });
 
 // GET api/users
 userRouter.get('/', (req, res) => {
-  return helper.buildListOfUsers()
-    .then(results => {
-      const userArr = results.slice();
-      res.json(userArr);
+  // check for query parameters
+  let queryObject = {};
+  if(Object.keys(req.query).length > 0) {
+    queryObject = req.query;
+  }
+  return helper.buildListOfUsers(queryObject)
+    .then(usersList => {
+      console.log(' @@@@@@@@@ ', usersList)
+      res.json(usersList);
     })
     .catch( err => {
       res.status(500).json({message: `Internal server error: ${err}`});
@@ -54,7 +59,6 @@ userRouter.post('/register', jsonParser, (req, res) => {
 
   // check for missing username or passwd
   if(missingField.length > 0) {
-    console.log('missingField',missingField);
     return res.status(422).json({
       code: 422,
       reason: 'ValidationError',
@@ -85,7 +89,6 @@ userRouter.post('/register', jsonParser, (req, res) => {
     .then( result => {
       // build db insert obj
       let convInUsrObj = helper.convertCase(inUsrObj, 'ccToSnake');
-      console.log('convInUsrObj',convInUsrObj)
       if(convInUsrObj.user_type === 'organization') {
         convInUsrObj = Object.assign( {}, convInUsrObj, {
           password: result,
@@ -276,25 +279,6 @@ userRouter.put('/:id', jsonParser, (req, res) => {
       if(err.reason === 'ValidationError') {
         return res.status(err.code).json(err);
       }
-      res.status(500).json({message: `Internal server error: ${err}`});
-    });
-});
-
-// Clear test data
-userRouter.delete('/clear/test/data', (req, res) => {
-  const knex = require('../db');
-  return knex('users')
-    .where('username', 'like', '%user%')
-    .del()
-    .then( () => {
-      return knex('users')
-        .where('username', 'like', '%test%')
-        .del()
-        .then( () => {
-          res.status(200).json({message: 'Test data deleted'});
-        });
-    })
-    .catch( err => {
       res.status(500).json({message: `Internal server error: ${err}`});
     });
 });

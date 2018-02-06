@@ -22,7 +22,6 @@ oppRouter.get('/', (req, res) => {
   }
   return helper.buildOppList(queryObject)
     .then( oppList => {
-      console.log('oppList',oppList);
       res.json(oppList);
     })
     .catch( err => {

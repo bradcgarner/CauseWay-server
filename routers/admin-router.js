@@ -18,9 +18,10 @@ adminRouter.get('/initialize', (req, res) => {
   const knex = require('../db');
 
   // get users
-  return helper.buildListOfUsers()
-    .then(results => {
-      userArray = results.slice();
+  return helper.buildUsersList()
+    .then(usersList => {
+      console.log('usersList',usersList[0]);
+      userArray = usersList.slice();
     })
 
     // get causes
