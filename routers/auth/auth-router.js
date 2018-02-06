@@ -2,19 +2,19 @@
 
 const express = require('express');
 const authRouter = express.Router();
-const { helper } = require('../routers/router-helpers');
+const { helper, convertCase } = require('../router-helpers');
 const passport = require('passport');
 const jwt = require('jsonwebtoken');
 const { localStrategy } = require('./local-strategy');
 const { jwtStrategy } = require('./jwt-strategy');
-const { JWT_SECRET, JWT_EXPIRY } = require('../config');
+const { JWT_SECRET, JWT_EXPIRY } = require('../../config');
 const bodyParser = require('body-parser');
 authRouter.use(bodyParser.json());
 
 passport.use(localStrategy);
 passport.use(jwtStrategy);
 
-const knex = require('../db');
+const knex = require('../../db');
 
 const createAuthToken = function (user){
   return jwt.sign({user}, JWT_SECRET, {
@@ -56,7 +56,7 @@ authRouter.post('/login', localAuth, (req, res) => {
         .then(result => {
           // console.log('buildUser', result);
 
-          respObj = helper.convertCase(result, 'snakeToCC');
+          respObj = convertCase(result, 'snakeToCC');
           // console.log('respObj', respObj);
 
           return (helper.getExtUserInfo(usrId));

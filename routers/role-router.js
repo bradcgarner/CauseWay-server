@@ -2,12 +2,11 @@
 
 const express = require('express');
 const passport = require('passport');
-const { jwtStrategy } = require('../auth/jwt-strategy');
+const { jwtStrategy } = require('./auth/jwt-strategy');
 const roleRouter = express.Router();
 const bodyParser = require('body-parser');
 const jsonParser = bodyParser.json();
-const { helper } = require('./router-helpers');
-const { epDbHelp } = require('./router-db-helpers');
+const { helper, convertCase } = require('./router-helpers');
 
 process.stdout.write('\x1Bc');
 
@@ -20,7 +19,7 @@ roleRouter.post('/', jsonParser, (req, res) => {
   const knex = require('../db');
   let retObj = {};
   let orgName;
-  let rolePostObj = epDbHelp.scrubFields(req.body, 'roles');
+  let rolePostObj = convertCase(req.body, 'ccToSnake');
   console.log('rolePostObj',rolePostObj);
 
   // validate capability
@@ -69,7 +68,7 @@ roleRouter.put('/:id', jsonParser, (req, res) => {
   const roleId = req.params.id;
   let retObj = {};
   let orgName;
-  let rolePutObj = epDbHelp.scrubFields(req.body, 'roles');
+  let rolePutObj = convertCase(req.body, 'ccToSnake');
   if(rolePutObj.id) { delete rolePutObj.id; }
   console.log(rolePutObj);
 

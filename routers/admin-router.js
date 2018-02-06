@@ -20,7 +20,7 @@ adminRouter.get('/initialize', (req, res) => {
   // get users
   return helper.buildUsersList()
     .then(usersList => {
-      console.log('usersList',usersList[0]);
+      console.log('usersList admin router',usersList[0]);
       userArray = usersList.slice();
     })
 

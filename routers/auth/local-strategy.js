@@ -6,7 +6,7 @@ const passport = require('passport');
 const { validatePassword } = require('./bcrypt');
 const { Strategy: LocalStrategy } = require('passport-local');
 
-const knex = require('../db');
+const knex = require('../../db');
 
 const localStrategy = new LocalStrategy((username, password, done) => {
   // console.log('in localstrategy', username, password, done);

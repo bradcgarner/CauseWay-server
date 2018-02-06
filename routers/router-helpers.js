@@ -1,21 +1,28 @@
 'use strict';
+const { keys } = require('./helper-keys');
+const { sql } = require('./helper-sql');
 
 let helper = {}; 
 
 helper.buildUsersList = function(queryObject) {
   const table = 'users';
-  const selectStatement = formatUsersListSelectStatement();
-  const rawSql = buildRawSqlFromQuery(queryObject, table, selectStatement);
+  const selectStatement = sql.usersListSelectStatement();
+  const rawSql = sql.rawFromQuery(queryObject, table, selectStatement);
   console.log('rawSql', rawSql);
 
   const knex = require('../db');
   return knex
     .raw(rawSql)
     .then( users => {
+      const usersList = users.rows;
       console.log('~~~~~~~~');
-      console.log('users.rows[0]', users.rows[0]);
+      console.log('users.rows[0]', usersList);
       console.log('~~~~~~~~');
-      return users.rows.map(user=> helper.convertCase(user, 'snakeToCC'));
+      const usersListCauses = pushPrimitiveRepsIntoArray(usersList, 'causes');
+      console.log('causes after new array', usersListCauses);
+      const usersListSkills = pushPrimitiveRepsIntoArray(usersListCauses, 'skills');
+      const usersListLinks = pushLinksIntoArray(usersListSkills);
+      return usersListLinks.map(user=> convertCase(user, 'snakeToCC'));
     });
 };
 
@@ -25,7 +32,7 @@ helper.buildUser = function (idUser) {
 
   // get user base info
   return knex('users')
-    .select(usersKeys)
+    .select(keys.usersKeys)
     .where('id', '=', idUser)
     .then( users => {
       user = (users[0]);
@@ -81,7 +88,7 @@ helper.getExtUserInfo = function(idUser) {
     .join('users', 'roles.id_user_adding', '=', 'users.id')
     .where('capabilities', '=', 'admin')
     .andWhere('id_user_receiving', '=', idUser)
-    .select( rolesKeys )
+    .select( keys.rolesKeys )
 
     .then( adminOfs => {
       adminOfArr = adminOfs.slice();
@@ -91,7 +98,7 @@ helper.getExtUserInfo = function(idUser) {
         .join('users', 'roles.id_user_receiving', '=', 'users.id')
         .where('capabilities', '=', 'admin')
         .andWhere('id_user_adding', '=', idUser)
-        .select(rolesKeys);
+        .select(keys.rolesKeys);
     })
     .then( admins => {
       adminsArr = admins.slice();
@@ -101,7 +108,7 @@ helper.getExtUserInfo = function(idUser) {
         .join('users', 'roles.id_user_receiving', '=', 'users.id')
         .where('capabilities', '=', 'following')
         .andWhere('id_user_adding', '=', idUser)
-        .select(rolesKeys);
+        .select(keys.rolesKeys);
     })
     .then( follows => {
       followsArr = follows.slice();
@@ -109,7 +116,7 @@ helper.getExtUserInfo = function(idUser) {
       // following
       return knex('opportunities')
         .where('id_user', '=', idUser)
-        .select(opportunitiesKeys)
+        .select(keys.opportunitiesKeys)
         .orderBy('timestamp_start');
     })
     .then( opportunities => {
@@ -131,7 +138,7 @@ helper.getExtUserInfo = function(idUser) {
       const oppResponsePromisesArray = oppsArr.map((opp,index)=>{
         return knex('responses')
           .join('users', 'responses.id_user', '=', 'users.id')
-          .select(responsesUsersKeys)
+          .select(keys.responsesUsersKeys)
           .where('id_opportunity', '=', opp.id)
           .then( responses => {
             oppsArr[index].responses = responses;
@@ -145,7 +152,7 @@ helper.getExtUserInfo = function(idUser) {
       return knex('responses')
         .join('opportunities', 'responses.id_opportunity', '=', 'opportunities.id')
         .where('responses.id_user', '=', idUser)
-        .select(responsesOpportunitiesKeys)
+        .select(keys.responsesOpportunitiesKeys)
         .orderBy('responses.timestamp_created');
     })
     .then( responses => {
@@ -153,7 +160,7 @@ helper.getExtUserInfo = function(idUser) {
       const responsePromisesArray = responses.map((response,index)=>{
         return knex('opportunities')
           .join('users', 'opportunities.id_user', '=', 'users.id')
-          .select(opportunitiesUsersKeys)
+          .select(keys.opportunitiesUsersKeys)
           .where('opportunities.id', '=', response.idOpportunity)
           .then( user => {
             respArr[index].organization = user[0].organization;
@@ -181,7 +188,7 @@ helper.getExtUserInfo = function(idUser) {
 
 helper.buildOppList = function(queryObject) {
   const table = 'opportunities';
-  const rawSql = buildRawSqlFromQuery(queryObject, table);
+  const rawSql = sql.rawFromQuery(queryObject, table);
   console.log('rawSql', rawSql);
   let oppsArray;
 
@@ -191,7 +198,7 @@ helper.buildOppList = function(queryObject) {
     .then( opps => {
       console.log('opportunities', opps.rows[0]);
       console.log('~~~~~~~~');
-      oppsArray = opps.rows.map(opp=> helper.convertCase(opp, 'snakeToCC'));
+      oppsArray = opps.rows.map(opp=> convertCase(opp, 'snakeToCC'));
       console.log('oppsArray', oppsArray[0]);
       console.log('xxxxxxx');
 
@@ -215,7 +222,7 @@ helper.buildOppList = function(queryObject) {
       const usersPromisesArray = oppsArray.map((opp,index)=>{
         return knex('opportunities')
           .join('users', 'opportunities.id_user', '=', 'users.id')
-          .select(usersKeysAppendToOpportunity)
+          .select(keys.usersKeysAppendToOpportunity)
           .where('opportunities.id', '=', opp.id)
           .then( user => {
             oppsArray[index].organization = user[0].organization;
@@ -227,13 +234,9 @@ helper.buildOppList = function(queryObject) {
     })
     .then(()=>{
       return oppsArray.sort((a,b)=>{
-        if (a.timestamp_start < b.timestamp_start) {
-          return -1;
-        }
-        if (a.timestamp_start > b.timestamp_start) {
-          return 1;
-        }
-        return 0;
+        return a.timestamp_start < b.timestamp_start ? -1 :
+          a.timestamp_start > b.timestamp_start ? 1 :
+            0;
       });      
     });
 };
@@ -261,7 +264,7 @@ helper.buildOpp = function(inOppId) {
       // get responses
       return knex('responses')
         .join('users', 'responses.id_user', '=', 'users.id')
-        .select(responsesUsersKeys)
+        .select(keys.responsesUsersKeys)
         .where('responses.id_opportunity', '=', inOppId)
         .debug(false);
     })
@@ -272,14 +275,14 @@ helper.buildOpp = function(inOppId) {
       // get opp info
       return knex('opportunities')
         .join('users', 'opportunities.id_user', '=', 'users.id')
-        .select(opportunitiesUsersKeys)
+        .select(keys.opportunitiesUsersKeys)
         .where('opportunities.id', '=', inOppId)
         .debug(false);
     })
     .then( opportunities => {
       console.log('opportunities',opportunities);
 
-      oppObj = helper.convertCase(opportunities[0], 'snakeToCC');
+      oppObj = convertCase(opportunities[0], 'snakeToCC');
       console.log('oppObj',oppObj);
 
       return this.getOrgName(oppObj.idUser);
@@ -295,36 +298,6 @@ helper.buildOpp = function(inOppId) {
       console.log('opp with causes and responses',opp);
 
       return opp;
-    });
-};
-
-helper.buildResponse = function(inRespId) {
-  let response = {};
-
-  const knex = require('../db');
-  return knex('responses')
-    .join('users', 'responses.id_user', '=', 'users.id')
-    .where('responses.id', '=', inRespId)
-    .select(responsesUsersKeys)
-    .then( result => {
-      response = this.convertCase(result[0], 'snakeToCC');
-      return this.getOppTitle(response.idOpportunity)
-        .then( title => {
-          response = Object.assign( {}, response, {
-            title: title
-          });
-          return response;
-        });
-    });
-};
-
-helper.getOrgName = function(idUser) {
-  const knex = require('../db');
-  return knex('users')
-    .select('organization')
-    .where('id', '=', idUser)
-    .then( result => {
-      return (result[0].organization);
     });
 };
 
@@ -370,7 +343,7 @@ helper.buildOppBase = function(inOppObj) {
     idUser,
     link
   };
-  let retBaseObj = this.convertCase(opportunity, 'ccToSnake');
+  let retBaseObj = convertCase(opportunity, 'ccToSnake');
   console.log('retBaseObj',retBaseObj);
 
   return retBaseObj;
@@ -404,306 +377,99 @@ helper.buildOppCausesArr = function(oppId, inCausesArr) {
     });
 };
 
-// @@@@@@@@@@@@@@@@@@ SQL @@@@@@@@@@@@@@@@@@@@@@@@
+helper.buildResponse = function(inRespId) {
+  let response = {};
 
-const format1ManyQuery3Tables = (t1, f1, f12, t2, t3, f3, f32, f3get, offsetIndex) => {
-  return `(SELECT ${t3}.${f3get} FROM ${t3} WHERE ${t3}.${f3} = (SELECT ${t3}.${f3} FROM ${t2} JOIN ${t3} ON ${t2}.${f32} = ${t3}.${f3} WHERE ${t2}.${f12} = ${t1}.${f1} ORDER by ${t2}.${f32} LIMIT 1 OFFSET ${offsetIndex})) as ${t3}${offsetIndex}`;
-};
-
-const format1ManyQuery2Tables = (t1, f1, f12, t2, f2, f22, f2get, offsetIndex) => {
-  return `(SELECT ${t2}.${f2get} FROM ${t2} WHERE ${t2}.${f12} = ${t1}.${f1} ORDER by ${t2}.${f22} LIMIT 1 OFFSET ${offsetIndex}) as ${t2}${offsetIndex}`;
-};
-
-const format1ManyQueryArray3Tables = (t1, f1, f12, t2, t3, f3, f32, f3get, reps) => {
-  const queryArray = [];
-  for (let i=0; i<reps; i++) {
-    queryArray.push(format1ManyQuery3Tables (t1, f1, f12, t2, t3, f3, f32, f3get, i));
-  }
-  return queryArray;
-};
-
-const format1ManyQueryArray2Tables = (t1, f1, f12, t2, f2, f22, f2get, reps) => {
-  const queryArray = [];
-  for (let i=0; i<reps; i++) {
-    queryArray.push(format1ManyQuery2Tables (t1, f1, f12, t2, f2, f22, f2get, i));
-  }
-  return queryArray;
-};
-
-const format1ManyQueryUsersToLinkUrl = () => {
-  const t1    = 'users';
-  const f1    = 'id';
-  const f12   = 'id_user';
-  const t2    = 'links';
-  const f2    = 'id';
-  const f22   = 'link_url';
-  const f2get = 'link_url';
-  const reps  = 4;
-  return format1ManyQueryArray2Tables(t1, f1, f12, t2, f2, f22, f2get, reps);
-};
-  
-const format1ManyQueryUsersToLinkType = () => {
-  const t1    = 'users';
-  const f1    = 'id';
-  const f12   = 'id_user';
-  const t2    = 'links';
-  const f2    = 'id';
-  const f22   = 'link_url';
-  const f2get = 'link_type';
-  const reps  = 4;
-  return format1ManyQueryArray2Tables(t1, f1, f12, t2, f2, f22, f2get, reps);
-};
-  
-const format1ManyQueryUsersToCauses = () => {
-  const t1    = 'users';
-  const f1    = 'id';
-  const f12   = 'id_user';
-  const t2    = 'users_causes'  ;
-  const t3    = 'causes' ;
-  const f3    = 'id'  ;
-  const f32   = 'id_cause';
-  const f3get = 'cause';
-  const reps  = 4;
-  return format1ManyQueryArray3Tables(t1, f1, f12, t2, t3, f3, f32, f3get, reps);
-};
-
-const format1ManyQueryUsersToSkills = () => {
-  const t1    = 'users';
-  const f1    = 'id';
-  const f12   = 'id_user';
-  const t2    = 'users_skills'  ;
-  const t3    = 'skills' ;
-  const f3    = 'id'  ;
-  const f32   = 'id_skill';
-  const f3get = 'skill';
-  const reps  = 4;
-  return format1ManyQueryArray3Tables(t1, f1, f12, t2, t3, f3, f32, f3get, reps);
-};
-
-const formatUsersListSelectStatement = function() {
-  // output 'SELECT [all users field], (SELECT complex join) as x1, (SELECT complex join) as y1'
-  const users = usersKeysRaw.map(key => `users.${key}`);
-  const linksType = format1ManyQueryUsersToLinkType();
-  const linksUrl = format1ManyQueryUsersToLinkUrl();
-  const causes = format1ManyQueryUsersToCauses();
-  const skills = format1ManyQueryUsersToSkills();
-  return `SELECT ${users.join(', ')}, ${linksType.join(', ')}, ${linksUrl.join(', ')}, ${causes.join(', ')}, ${skills.join(', ')}`;
-};
-
-const buildRawSqlFromQuery = function(queryObjectCC = {}, table, selectStatement ) {
-  const select = selectStatement ? selectStatement : 'SELECT *' ;
-  let rawSql = `${select} FROM ${table}`;
-  if(Object.keys(queryObjectCC).length > 0) {
-    const queryObject = this.convertCase(queryObjectCC, 'ccToSnake');
-    const arrayOfQueries = Object.keys(queryObject).map( key => {
-      return `LOWER(${key}) LIKE LOWER('%${queryObject[key]}%')`;
+  const knex = require('../db');
+  return knex('responses')
+    .join('users', 'responses.id_user', '=', 'users.id')
+    .where('responses.id', '=', inRespId)
+    .select(keys.responsesUsersKeys)
+    .then( result => {
+      response = convertCase(result[0], 'snakeToCC');
+      return this.getOppTitle(response.idOpportunity)
+        .then( title => {
+          response = Object.assign( {}, response, {
+            title: title
+          });
+          return response;
+        });
     });
-    rawSql = arrayOfQueries.length > 1 ?
-      `${select} FROM ${table} WHERE (${arrayOfQueries.join(') AND (')})`
-      : `${select} FROM ${table} WHERE ${arrayOfQueries[0]}` ;
+};
+
+helper.getOrgName = function(idUser) {
+  const knex = require('../db');
+  return knex('users')
+    .select('organization')
+    .where('id', '=', idUser)
+    .then( result => {
+      return (result[0].organization);
+    });
+};
+
+
+// @@@@@@@@@@@@@ COMPACTING JOIN ARRAYS @@@@@@@@@@@@@@
+
+const pushPrimitiveRepsIntoArray = (object, field) => {
+  // input: {causes1: x, causes2: y} // output: causes: [x,y]
+  if (Array.isArray(object)) {
+    return object.map(singleObject => pushPrimitiveRepsIntoArray(singleObject, field));
+  } else {
+    const newObject = Object.assign({}, object);
+    const newArray = [];
+    let rep = 0;
+    while (object[`${field}${rep}`]) {
+      newArray.push(object[`${field}${rep}`]);
+      rep++;
+    }
+    newObject[field] = newArray;
+    return newObject;
   }
-  return rawSql;
 };
 
-// @@@@@@@@@@@@@@@@@@@@@@@@@ KEYS @@@@@@@@@@@@@@@@@@@@@@@@
-
-const linksKeys = [
-  'id',
-  'id_user',
-  'link_type',
-  'link_url',
-  'timestamp_created',
-];
-const causesKeys = [
-  'id',
-  'cause',
-];
-const skillsKeys = [
-  'id',
-  'skill',
-];
-const usersKeysRaw = [
-  'id',
-  'timestamp_created',
-  'username',
-  'user_type',
-  'location_city',
-  'location_state',
-  'location_country',
-  'bio',
-  'first_name',
-  'last_name',
-  'logo',
-  'organization',
-  'availability',
-];
-const usersKeys = [
-  'id',
-  'timestamp_created as timestampCreated',
-  'username',
-  'user_type as userType',
-  'location_city as locationCity',
-  'location_state as locationState',
-  'location_country as locationCountry',
-  'bio',
-  'first_name as firstName',
-  'last_name as lastName',
-  'logo',
-  'organization',
-  'availability',
-];
-const usersKeysAppendToOpportunity = [
-  // this is a select of table opportunities, but ONLY getting user info to hydrate into opportunity
-  'users.username',
-  'users.user_type as userType',
-  'users.location_city as locationCity',
-  'users.location_state as locationState',
-  'users.location_country as locationCountry',
-  'users.bio',
-  'users.first_name as firstName',
-  'users.last_name as lastName',
-  'users.logo',
-  'users.organization',
-  'users.availability',
-];
-const rolesKeys = [
-  'roles.id as id',
-  'id_user_adding as idUserAdding',
-  'id_user_receiving as idUserReceiving',
-  'users.first_name as firstName',
-  'users.last_name as lastName',
-  'users.logo',
-  'users.location_city as locationCity',
-  'users.location_state as locationState',
-  'users.organization',
-  'capabilities'
-];
-const opportunitiesKeys = [
-  'id',
-  'opportunity_type as opportunityType',
-  'offer',
-  'title',
-  'narrative',
-  'timestamp_start as timestampStart',
-  'timestamp_end as timestampEnd',
-  'location_city as locationCity',
-  'location_state as locationState',
-  'location_country as locationCountry',
-  'link'
-];
-const opportunitiesUsersKeys = [
-  'opportunities.id',
-  'id_user as idUser',
-  'opportunity_type as opportunityType',
-  'offer',
-  'title',
-  'narrative',
-  'timestamp_start as timestampStart',
-  'timestamp_end as timestampEnd',
-  'users.user_type as userType',
-  'users.first_name as firstName',
-  'users.last_name as lastName',
-  'users.logo',
-  'users.organization',
-  'users.location_city as userLocationCity',
-  'users.location_state as userLocationState',
-  'users.location_country as userLocationCountry',
-  'opportunities.location_city as locationCity',
-  'opportunities.location_state as locationState',
-  'opportunities.location_country as locationCountry',
-  'link'
-];
-const responsesUsersKeys = [
-  'responses.id as id',
-  'id_user as idUser',
-  'id_opportunity as idOpportunity',
-  'response_status as responseStatus',
-  'timestamp_status_change as timestampStatusChange',
-  'responses.timestamp_created as timestampCreated',
-  'notes',
-  'users.first_name as firstName',
-  'users.last_name as lastName',
-  'users.organization'
-];
-const responsesOpportunitiesKeys = [
-  'responses.id',
-  'responses.id_user as idUser',
-  'responses.id_opportunity as idOpportunity',
-  'notes',
-  'response_status as responseStatus',
-  'responses.timestamp_status_change as timestampStatusChange',
-  'responses.timestamp_created as timestampCreated',
-  'opportunities.narrative',
-  'opportunities.title',
-  'opportunities.offer',
-  'opportunities.opportunity_type as opportunityType',
-  'opportunities.link',
-  'opportunities.location_city as locationCity',
-  'opportunities.location_state as locationState',
-  'opportunities.location_country as locationCountry',
-  'opportunities.timestamp_start as timestampStart',
-  'opportunities.timestamp_end as timestampEnd'
-];
-
-const snakeToCC = {
-  user_type: 'userType',
-  location_city: 'locationCity',
-  location_state: 'locationState',
-  location_country: 'locationCountry',
-  first_name: 'firstName',
-  last_name: 'lastName',
-  opportunity_type: 'opportunityType',
-  id_user: 'idUser',
-  id_cause: 'idCause',
-  id_opportunity: 'idOpportunity',
-  id_skill: 'idSkill',
-  id_user_adding: 'idUserAdding',
-  id_user_receiving: 'idUserReceiving',
-  link_type: 'linkType',
-  link_url: 'linkUrl',
-  response_status: 'responseStatus',
-  timestamp_created: 'timestampCreated',
-  timestamp_start: 'timestampStart',
-  timestamp_end: 'timestampEnd',
-  timestamp_status_change: 'timestampStatusChange'
+const pushLinksIntoArray = (object) => {
+  // input: {causes1: x, causes2: y} // output: causes: [x,y]
+  if (Array.isArray(object)) {
+    return object.map(singleObject => pushLinksIntoArray(singleObject));
+  } else {
+    const newObject = Object.assign({}, object);
+    const newArray = [];
+    let rep = 0;
+    while (object[`link_url${rep}`] || object[`link_type${rep}`]) {
+      newArray.push({
+        linkUrl: object[`link_url${rep}`], 
+        linkType: object[`link_type${rep}`]
+      });
+      rep++;
+    }
+    newObject.links = newArray;
+    return newObject;
+  }
 };
 
-const ccToSnake = {
-  userType: 'user_type',
-  locationCity: 'location_city',
-  locationState: 'location_state',
-  locationCountry: 'location_country',
-  firstName: 'first_name',
-  lastName: 'last_name',
-  opportunityType: 'opportunity_type',
-  idUser: 'id_user',
-  idCause: 'id_cause',
-  idOpportunity: 'id_opportunity',
-  idSkill: 'id_skill',
-  idUserAdding: 'id_user_adding',
-  idUserReceiving: 'id_user_receiving',
-  linkType: 'link_type',
-  linkUrl: 'link_url',
-  responseStatus: 'response_status',
-  timestampCreated: 'timestamp_created',
-  timestampStart: 'timestamp_start',
-  timestampEnd: 'timestamp_end',
-  timestampStatusChange: 'timestamp_status_change'
-};
-
-helper.convertCase = function(inputObject, mode) {
-  const outputObject = {};
-  const conversionTable = mode === 'ccToSnake' ? ccToSnake : snakeToCC ;
+const convertCase = function(inputObject, mode, limitingList) {
+  const caseObject = {};
+  const conversionTable = mode === 'ccToSnake' ? keys.ccToSnake : keys.snakeToCC ;
 
   Object.keys(inputObject).forEach(key => {
     if(conversionTable[key]) {
-      outputObject[conversionTable[key]] = inputObject[key];
+      caseObject[conversionTable[key]] = inputObject[key];
     } else {
-      outputObject[key] = inputObject[key];
+      caseObject[key] = inputObject[key];
     }
   });
-  
-  return outputObject;
+
+  if(keys[limitingList]) {
+    for (let key in caseObject) {
+      console.log('key', key);
+      if(!(keys[limitingList].includes(key))) {
+        console.log('    delete key', key);
+        delete caseObject[key];
+      }
+    }
+  }
+
+  return caseObject;
 };
 
-module.exports = { helper };
+module.exports = { helper, convertCase };

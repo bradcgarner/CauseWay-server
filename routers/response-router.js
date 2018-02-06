@@ -2,11 +2,11 @@
 
 const express = require('express');
 const passport = require('passport');
-const { jwtStrategy } = require('../auth/jwt-strategy');
+const { jwtStrategy } = require('./auth/jwt-strategy');
 const responseRouter = express.Router();
 const bodyParser = require('body-parser');
 const jsonParser = bodyParser.json();
-const { helper } = require('./router-helpers');
+const { helper, convertCase } = require('./router-helpers');
 
 process.stdout.write('\x1Bc');
 
@@ -33,7 +33,7 @@ responseRouter.post('/', jsonParser, (req, res) => {
       message: 'Error: opportunity and user id required'
     });
   }
-  respPostObj = helper.convertCase(req.body, 'ccToSnake');
+  respPostObj = convertCase(req.body, 'ccToSnake');
   return knex('responses')
     .insert(respPostObj)
     .returning ('id')
@@ -67,7 +67,7 @@ responseRouter.put('/:id', jsonParser, (req, res) => {
       message: 'Error: opportunity, user id and notes required'
     });
   }
-  respPutObj = helper.convertCase(req.body, 'ccToSnake');
+  respPutObj = convertCase(req.body, 'ccToSnake');
   if(respPutObj.id) { delete respPutObj.id; }
   respPutObj = Object.assign( {}, respPutObj, {
     timestamp_status_change: new Date()
