@@ -2,12 +2,12 @@
 
 const express = require('express');
 const passport = require('passport');
-const { jwtStrategy } = require('../auth/jwt-strategy');
+const { jwtStrategy } = require('./auth/jwt-strategy');
 const roleRouter = express.Router();
 const bodyParser = require('body-parser');
 const jsonParser = bodyParser.json();
-const { helper } = require('./router-helpers');
-const { epDbHelp } = require('./router-db-helpers');
+const { helper, convertCase } = require('./helper');
+const { keys } = require('./helper-keys');
 
 process.stdout.write('\x1Bc');
 
@@ -16,10 +16,11 @@ const jwtAuth = passport.authenticate('jwt', { session: false });
 
 // POST api/roles
 roleRouter.post('/', jsonParser, (req, res) => {
+  console.log(req.body);
   const knex = require('../db');
-  let retObj = {};
-  let orgName;
-  let rolePostObj = epDbHelp.scrubFields(req.body, 'roles');
+  let role = {};
+  let roleToInsert = convertCase(req.body, 'ccToSnake', 'rolesKeysRawInsert');
+  console.log('roleToInsert',roleToInsert);
 
   // validate capability
   const capabilityOpts = ['admin', 'following', 'delete'];
@@ -31,23 +32,23 @@ roleRouter.post('/', jsonParser, (req, res) => {
     });
   }
 
-  let orgId = rolePostObj.capabilities === 'admin' ? 
-    rolePostObj.id_user_adding : rolePostObj.id_user_receiving;
-  return helper.getOrg(orgId)
-    .then( org => {
-      orgName = org;
-      return knex('roles')
-        .insert(rolePostObj)
-        .returning ([
-          'id',
-          'id_user_adding as idUserAdding',
-          'id_user_receiving as idUserReceiving',
-          'capabilities']);
+  let idUser = roleToInsert.capabilities === 'admin' ? 
+    roleToInsert.id_user_adding : roleToInsert.id_user_receiving;
+  console.log('idUser', idUser);
+
+  return knex('roles')
+    .insert(roleToInsert)
+    .returning (keys.rolesKeysReturning)
+    .then( roleInserted => {
+      role = roleInserted[0];
+    })  
+    .then(()=> {
+      return helper.getOneRecord('users', 'id', idUser , 'organization')       
+      // return helper.getOrgName(idUser)
     })
-    .then( result => {
-      retObj = result[0];
-      retObj.organization = orgName;
-      res.json(retObj);
+    .then( userFound => {
+      role.organization = userFound.organization;
+      res.json(role);  
     })
     .catch( err => {
       if(err.reason === 'ValidationError') {
@@ -60,16 +61,14 @@ roleRouter.post('/', jsonParser, (req, res) => {
 // PUT api/roles/:id
 roleRouter.put('/:id', jsonParser, (req, res) => {
   const knex = require('../db');
-  const roleId = req.params.id;
-  let retObj = {};
-  let orgName;
-  let rolePutObj = epDbHelp.scrubFields(req.body, 'roles');
-  if(rolePutObj.id) { delete rolePutObj.id; }
-  console.log(rolePutObj);
+  const idRole = req.params.id;
+  let role = {};
+  let roleToUpdate = convertCase(req.body, 'ccToSnake', 'rolesKeysRawInsert');
+  console.log(roleToUpdate);
 
   // validate capability
   const capabilityOpts = ['admin', 'following', 'delete'];
-  if(!(capabilityOpts.includes(rolePutObj.capabilities))) {
+  if(!(capabilityOpts.includes(roleToUpdate.capabilities))) {
     return res.status(422).json({
       code: 422,
       reason: 'ValidationError',
@@ -77,28 +76,21 @@ roleRouter.put('/:id', jsonParser, (req, res) => {
     });
   }
 
-  let orgId = rolePutObj.capabilities === 'admin' ? 
-    rolePutObj.id_user_adding : 
-    (rolePutObj.capabilities === 'delete' ?
-      rolePutObj.id_user_adding :rolePutObj.id_user_receiving);
-
-  return helper.getOrg(orgId)
-    .then( org => {
-      orgName = org;
-      console.log(orgName);
-      return knex('roles')
-        .where('id', '=', roleId)
-        .update(rolePutObj)
-        .returning ([
-          'id',
-          'id_user_adding as idUserAdding',
-          'id_user_receiving as idUserReceiving',
-          'capabilities']);
+  let idUser = roleToUpdate.capabilities === 'admin' ? roleToUpdate.id_user_adding : 
+    roleToUpdate.capabilities === 'delete' ? roleToUpdate.id_user_adding :
+      roleToUpdate.id_user_receiving;
+  return knex('roles')
+    .where('id', '=', idRole)
+    .update(roleToUpdate)
+    .returning (keys.rolesKeysReturning)
+    .then( roleUpdated => {
+      role = roleUpdated[0];
+      return helper.getOneRecord('users', 'id', idUser , 'organization')
+      // return helper.getOrgName(idUser)
     })
-    .then( result => {
-      retObj = result[0];
-      retObj.organization = orgName;
-      res.json(retObj);
+    .then( userFound => {
+      role.organization = userFound.organization;
+      res.json(role);
     })
     .catch( err => {
       if(err.reason === 'ValidationError') {
@@ -110,18 +102,18 @@ roleRouter.put('/:id', jsonParser, (req, res) => {
 
 // DELETE api/roles/:id
 
-roleRouter.delete('/:id', (req, res) => {
-  const knex = require('../db');
-  return knex('roles')
-    .where('id', '=', req.params.id)
-    .del()
-    .then( () => {
-      res.status(200).json({message: 'Role deleted'});
-    })
-    .catch( err => {
-      res.status(500).json({message: `Internal server error: ${err}`});
-    });
-});
+// roleRouter.delete('/:id', (req, res) => {
+//   const knex = require('../db');
+//   return knex('roles')
+//     .where('id', '=', req.params.id)
+//     .del()
+//     .then( () => {
+//       res.status(200).json({message: 'Role deleted'});
+//     })
+//     .catch( err => {
+//       res.status(500).json({message: `Internal server error: ${err}`});
+//     });
+// });
 
 
 module.exports = { roleRouter };

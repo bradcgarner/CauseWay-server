@@ -2,12 +2,13 @@
 
 const express = require('express');
 const passport = require('passport');
-const { jwtStrategy } = require('../auth/jwt-strategy');
+const { jwtStrategy } = require('./auth/jwt-strategy');
 const userRouter = express.Router();
 const bodyParser = require('body-parser');
 const jsonParser = bodyParser.json();
-const { hashPassword } = require('../auth/bcrypt');
-const { helper } = require('./router-helpers');
+const { hashPassword } = require('./auth/bcrypt');
+const { helper, convertCase } = require('./helper');
+const { keys } = require('./helper-keys');
 
 process.stdout.write('\x1Bc');
 
@@ -16,10 +17,17 @@ const jwtAuth = passport.authenticate('jwt', { session: false });
 
 // GET api/users
 userRouter.get('/', (req, res) => {
-  return helper.buildListOfUsers()
-    .then(results => {
-      const userArr = results.slice();
-      res.json(userArr);
+  // check for query parameters
+  let queryObject = {};
+  if(Object.keys(req.query).length > 0) {
+    queryObject = req.query;
+  } 
+  console.log(' queryObject ', queryObject);
+
+  return helper.buildUsersList(queryObject)
+    .then(usersList => {
+      console.log(' @@@@@@@@@ ', usersList);
+      res.json(usersList);
     })
     .catch( err => {
       res.status(500).json({message: `Internal server error: ${err}`});
@@ -34,7 +42,7 @@ userRouter.get('/:id', (req, res) => {
   
   return helper.buildUser(idUser)
     .then( result => {
-      respObj = helper.convertCase(result, 'snakeToCC');
+      respObj = convertCase(result, 'snakeToCC');
       return (helper.getExtUserInfo(idUser));
     })
     .then( resultObj => {
@@ -54,7 +62,6 @@ userRouter.post('/register', jsonParser, (req, res) => {
 
   // check for missing username or passwd
   if(missingField.length > 0) {
-    console.log('missingField',missingField);
     return res.status(422).json({
       code: 422,
       reason: 'ValidationError',
@@ -63,11 +70,11 @@ userRouter.post('/register', jsonParser, (req, res) => {
   }
 
   // check for dup username
-  let inUsrObj = Object.assign( {}, req.body);
-  console.log('body', inUsrObj);
+  let userFromClient = Object.assign( {}, req.body);
+  console.log('body', userFromClient);
   return knex('users')
     .select()
-    .where({username: inUsrObj.username})
+    .where({username: userFromClient.username})
     .then( results => {
       if(results.length > 0) {
         return Promise.reject({
@@ -80,31 +87,30 @@ userRouter.post('/register', jsonParser, (req, res) => {
     
     // no dup, insert new user
     .then( () => {
-      return hashPassword(inUsrObj.password);
+      return hashPassword(userFromClient.password);
     })
     .then( result => {
       // build db insert obj
-      let convInUsrObj = helper.convertCase(inUsrObj, 'ccToSnake');
-      console.log('convInUsrObj',convInUsrObj)
-      if(convInUsrObj.user_type === 'organization') {
-        convInUsrObj = Object.assign( {}, convInUsrObj, {
+      let userObject = convertCase(userFromClient, 'ccToSnake');
+      if(userObject.user_type === 'organization') {
+        userObject = Object.assign( {}, userObject, {
           password: result,
           first_name: null,
           last_name: null
         });
       }
       else {
-        convInUsrObj = Object.assign( {}, convInUsrObj, {
+        userObject = Object.assign( {}, userObject, {
           password: result,
           organization: null,
         });
       }
       // insert user
       return knex('users')
-        .insert(convInUsrObj)
+        .insert(userObject)
         .returning(['id', 'username', 'user_type', 'first_name', 'last_name', 'organization'])
         .then( results => {
-          const resObj = helper.convertCase(results[0], 'snakeToCC');
+          const resObj = convertCase(results[0], 'snakeToCC');
           res.status(201).json(resObj);
         });
     })
@@ -119,10 +125,11 @@ userRouter.post('/register', jsonParser, (req, res) => {
 // PUT api/users/:id
 userRouter.put('/:id', jsonParser, (req, res) => {
   const idUser = req.params.id;
+  console.log('idUser', idUser);
   const knex = require('../db');
-  let inUsrObj = Object.assign( {}, req.body);
-  if(inUsrObj.id) { delete inUsrObj.id; }
-  let convInUsrObj = {};
+  let userFromClient = Object.assign( {}, req.body);
+  if(userFromClient.id) { delete userFromClient.id; }
+  let userObject = {};
   let linksArr = req.body.links.length > 0 ? req.body.links.slice() : [] ;
   let linkPostArr = [];
   let causesArr = req.body.causes.length > 0 ? req.body.causes.slice() : [] ;
@@ -130,50 +137,45 @@ userRouter.put('/:id', jsonParser, (req, res) => {
   let skillsArr = req.body.skills.length > 0 ? req.body.skills.slice() : [] ;
   let skillPostArr = [];
 
-
   // verify id
   return knex('users')
     .select()
     .where('id', '=', idUser)
-    .then( results => {
-      if(!results) {
+    .then( userFound => {
+      console.log('userFound',userFound);
+      if(!userFound) {
         return Promise.reject({
           code: 422,
           reason: 'ValidationError',
           message: 'User id not found.',
         });
       }
-    })    
-    
-    // user exists, update info
-    .then( () => {
-      // get hashed pw
-      convInUsrObj = helper.convertCase(inUsrObj, 'ccToSnake');
-      if(convInUsrObj.password) {
-        return hashPassword(convInUsrObj.password);
-      }
-      else {
-        return;
-      }
-    })
+      console.log('not rejected');
 
-    .then( result => {
-      // process base user info
-      if(result){
-        convInUsrObj = Object.assign( {}, convInUsrObj, {
-          password: result
-        });
-      }
-      delete convInUsrObj.links;
-      delete convInUsrObj.causes;
-      delete convInUsrObj.skills;
+      // format for db (snake case, no join fields)
+      userObject = convertCase(userFromClient, 'ccToSnake', 'usersKeysInsert');
+      console.log('4 userObject', userObject);
+
+      // get hashed pw
+      if(userObject.password) return hashPassword(userObject.password);
+      console.log('5 userObject', userObject);
+      return;
+    })
+    .then(hashedPassword => {
+      console.log('hashedPassword',hashedPassword);
+
+      if(hashedPassword) userObject.password = hashedPassword ;
+      console.log('6 userObject',userObject);
+
+      // update user
       return knex('users')
         .where('id', '=', idUser)
-        .update(convInUsrObj)
+        .update(userObject)
         .returning(['id', 'username']);
     })
 
-    .then( () => {
+    .then( (userreturned) => {
+      console.log('userreturned', userreturned);
       // process links
       return knex('links')
         .where('id_user', '=', idUser)
@@ -269,32 +271,13 @@ userRouter.put('/:id', jsonParser, (req, res) => {
       return helper.buildUser(idUser);
     })
     .then( retObj => {
-      let usrObjCC = helper.convertCase(retObj, 'snakeToCC');
+      let usrObjCC = convertCase(retObj, 'snakeToCC');
       res.status(201).json(usrObjCC);
     })
     .catch( err => {
       if(err.reason === 'ValidationError') {
         return res.status(err.code).json(err);
       }
-      res.status(500).json({message: `Internal server error: ${err}`});
-    });
-});
-
-// Clear test data
-userRouter.delete('/clear/test/data', (req, res) => {
-  const knex = require('../db');
-  return knex('users')
-    .where('username', 'like', '%user%')
-    .del()
-    .then( () => {
-      return knex('users')
-        .where('username', 'like', '%test%')
-        .del()
-        .then( () => {
-          res.status(200).json({message: 'Test data deleted'});
-        });
-    })
-    .catch( err => {
       res.status(500).json({message: `Internal server error: ${err}`});
     });
 });

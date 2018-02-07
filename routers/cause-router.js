@@ -2,7 +2,7 @@
 
 const express = require('express');
 const passport = require('passport');
-const { jwtStrategy } = require('../auth/jwt-strategy');
+const { jwtStrategy } = require('./auth/jwt-strategy');
 const causeRouter = express.Router();
 const bodyParser = require('body-parser');
 const jsonParser = bodyParser.json();

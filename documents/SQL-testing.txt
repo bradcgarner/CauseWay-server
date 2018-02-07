@@ -1,0 +1,64 @@
+// .raw( 'SELECT users.organization, users.id, users.username, users.user_type, users.first_name, users.last_name, users_causes.id FROM users left join users_causes on users_causes.id_user = users.id')//rawSqlWithJoins)
+  // .orderBy('id');
+
+  // SELECT users.id, users.username, users.user_type, users.first_name, users.last_name, 
+  // (select users_causes.id FROM users_causes where users.id = users_causes.id_user limit 1) as userscausesuserid
+  // from users;
+
+  // SELECT users.id, users.username, users.user_type, users.first_name, users.last_name, 
+  // (select users_causes.id FROM users_causes where users.id = users_causes.id_user limit 1) as userscausesuserid,
+  // (select causes.cause from causes where causes.id = userscausesuserid, limit 1) as userscauses
+  // from users;
+
+  // SELECT users.id, users.username, users.user_type, users.first_name, users.last_name, 
+  // (select causes.cause from causes where causes.id = (select users_causes.id FROM users_causes where users.id = users_causes.id_user limit 1) limit 1) as userscauses
+  // from users;
+
+  /*
+  SELECT users.id, users.username, users.user_type, users.first_name, users.last_name,
+  (select causes.cause from causes where causes.id = 
+    (select users_causes.id FROM users_causes where users_causes.id_user = users.id order by users_causes.id limit 1) 
+  order by causes.cause limit 1) as userscauses1,
+  (select causes.cause from causes where causes.id = 
+    (select users_causes.id FROM users_causes where users_causes.id_user = users.id order by users_causes.id limit 1) 
+  order by causes.cause limit 1) as userscauses2,
+  (select causes.cause from causes where causes.id = 
+    (select users_causes.id FROM users_causes where users_causes.id_user = users.id order by users_causes.id limit 1) 
+  order by causes.cause limit 1) as userscauses3
+     from users;
+  */
+
+  /*
+  SELECT users.id, users.username, users.user_type, users.first_name, users.last_name,
+    (select users_causes.id FROM users_causes where users_causes.id_user = users.id order by users_causes.id limit 1)  as ucid1,
+  
+    (select users_causes.id FROM users_causes where users_causes.id_user = users.id order by users_causes.id limit 1 offset 1)  as ucid2,
+  
+    (select users_causes.id FROM users_causes where users_causes.id_user = users.id order by users_causes.id limit 1 offset 2)  as ucid3
+     from users;
+  */
+
+  /*
+  SELECT users.id, users.username, users.user_type, users.first_name, users.last_name,
+  (select causes.cause from causes where causes.id = 
+    (select causes.id FROM users_causes join causes on users_causes.id_cause = causes.id where users_causes.id_user = users.id order by users_causes.id limit 1 offset 0))  as cause1,
+  
+  (select skills.skill from skills where skills.id = 
+    (select skills.id FROM users_skills join skills on users_skills.id_skill = skills.id where users_skills.id_user = users.id order by users_skills.id limit 1 offset 0))  as skill1,
+  
+  (select links.link_type from links where links.id = 
+    users.id limit 1 offset 0) as link_type1,
+
+  (select links.link_url from links where links.id = 
+    users.id limit 1 offset 0) as link_url1,
+
+     from users;
+  */
+
+  /*
+
+select * from users_causes where id_user = 3;
+
+select users_causes.id, causes.cause from users_causes join causes on causes.id = users_causes.id_cause where
+users_causes.id_user = 3;
+  */

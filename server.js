@@ -18,7 +18,7 @@ const { userRouter } = require('./routers/user-router');
 const { oppRouter } = require('./routers/opp-router');
 const { causeRouter } = require('./routers/cause-router');
 const { adminRouter } = require('./routers/admin-router');
-const { authRouter } = require('./auth/auth-router');
+const { authRouter } = require('./routers/auth/auth-router');
 const { roleRouter } = require('./routers/role-router');
 const { responseRouter } = require('./routers/response-router');
 

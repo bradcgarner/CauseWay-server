@@ -1,0 +1,1466 @@
+swagger: '2.0'
+info:
+  description: CauseWay connects volunteers and charitable organizations.
+  version: "2.0"
+  title: CauseWay API
+  contact:
+    email: brad@bradgarner.com
+
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+# tags are used for organizing operations
+tags:
+- name: admins
+  description: Secured Admin-only calls
+- name: appOpen
+  description: Non-secure operations used by front-end application
+- name: appSecure
+  description: Secure operations used by front-end application
+
+paths:
+  /api/admin/initialize:
+    get:
+      tags:
+      - appOpen
+      summary: initializes app
+      description: Populates general/static value lists (skills, causes, etc.), and returns a list of users for teaser content. Query parameters for list of users is currently static.
+      produces:
+      - application/json
+      responses:
+        204:
+          description: object with array of skills, causes, users
+          schema:
+            type: object 
+            properties:
+              skills:
+                type: array
+                items:
+                  type: string
+              causes:
+                type: array
+                items:
+                  type: string
+              users:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    username:
+                      type: string
+                    userType:
+                      type: string
+                    firstName:
+                      type: string
+                    lastName:
+                      type: string
+                    organization:
+                      type: string
+                    logo:
+                      type: string
+                    locationCity:
+                      type: string
+                    locationState:
+                      type: string
+                    locationCountry:
+                      type: string
+                    availability:
+                      type: string
+                    bio:
+                      type: string
+                    # join values
+                    links:
+                      type: array
+                      items: 
+                        type: object
+                        properties:
+                          linkType:
+                            type: string
+                          linkURL:
+                            type: string
+                    causes:
+                      type: array
+                      items: 
+                        type: string
+                    skills:   
+                      type: array
+                      items: 
+                        type: string
+        500:
+          description: internal server error
+          
+  /api/users:
+    get:
+      tags:
+      - appSecure
+      summary: returns a list of users.
+      description: All-purpose endpoint for any combination of individual users. Accepts any combination of query parameters listed below. Returns all matches found.  If no matches found, returns only status message. If no query parameters are supplied, returns a list of X quantity of users matching static parameters coded on server for teaser content.
+      consumes:
+      - query parameters
+      produces:
+      - application/json
+      parameters:
+      - name: userType
+        type: string
+        in: query
+        description: individual || organization
+        required: false
+      - name: causes
+        type: string
+        in: query
+        description: searches for exact match in join table
+        required: false
+      - name: skills
+        type: string
+        in: query
+        description: searches for exact match in join table
+        required: false
+      - name: firstName
+        type: string
+        in: query
+        description: searches firstName for substring of parameter
+        required: false
+      - name: lastName
+        type: string
+        in: query
+        description: searches lastName for substring of parameter
+        required: false
+      - name: username
+        type: string
+        in: query
+        description: searches username for substring of parameter
+        required: false     
+      - name: organization
+        type: string
+        in: query
+        description: searches organization for substring of parameter
+        required: false  
+      - name: bio
+        type: string
+        in: query
+        description: searches bio for substring of parameter
+        required: false 
+      - name: locationCity
+        type: string
+        in: query
+        description: searches for substring in locationCity
+        required: false
+      - name: locationState
+        type: string
+        in: query
+        description: seraches for exact match of state code
+        required: false
+      - name: locationCountry
+        type: string
+        in: query
+        description: searches for exact match of country code
+        required: false
+      - name: links
+        type: string
+        in: query
+        description: searches links join table for substring of parameter
+        required: false
+      - name: adminOf
+        type: string
+        in: query
+        description: not available; future expansion. Search roles join table organization name or id???
+        required: false
+      - name: following
+        type: string
+        in: query
+        description: not available; future expansion. Search roles join table organization name or id???
+        required: false
+      - name: responses
+        type: string
+        in: query
+        description: not available; future expansion
+        required: false
+
+      responses:
+        200:
+          description: array of users
+          schema:
+            type: array
+            items:
+              type: object
+              properties:
+                id:
+                  type: integer
+                username:
+                  type: string
+                userType:
+                  type: string
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                organization:
+                  type: string
+                logo:
+                  type: string
+                locationCity:
+                  type: string
+                locationState:
+                  type: string
+                locationCountry:
+                  type: string
+                availability:
+                  type: string
+                bio:
+                  type: string
+                # join values
+                links:
+                  type: array
+                  items: 
+                    type: object
+                    properties:
+                      linkType:
+                        type: string
+                      linkURL:
+                        type: string
+                        format: url
+                causes:
+                  type: array
+                  items: 
+                    type: string
+                skills:
+                  type: array
+                  items: 
+                    type: string
+        400:
+          description: no matching users found
+        500:
+          description: internal server error
+  
+    post:
+      tags:
+      - appSecure
+      summary: create a single user
+      description: create a single user
+      consumes: 
+      - application/json
+      produces:
+      - application/json
+      parameters:
+        - name: opportunity
+          in: body
+          description: user to create
+          schema:
+            type: object
+            properties:
+                username:
+                  type: string
+                userType:
+                  type: string
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                organization:
+                  type: string
+      responses:
+        200:
+          description: new user, with id
+          schema:
+            type: object
+            properties:
+              id:
+                type: integer
+              username:
+                type: string
+              userType:
+                type: string
+              firstName:
+                type: string
+              lastName:
+                type: string
+              organization:
+                type: string
+              logo:
+                type: string
+              locationCity:
+                type: string
+              locationState:
+                type: string
+              locationCountry:
+                type: string
+              availability:
+                type: string
+              bio:
+                type: string
+              # join values
+              links:
+                type: array
+                items: 
+                  type: object
+                  properties:
+                    linkType:
+                      type: string
+                    linkURL:
+                      type: string
+                      format: url
+              causes:
+                type: array
+                items: 
+                  type: string
+              skills:
+                type: array
+                items: 
+                  type: string
+        500:
+          description: internal server error
+          
+  /api/users/{id}:
+    get:
+      tags:
+      - appSecure
+      summary: get single user by id
+      description: get single user by id
+      consumes: 
+      - route parameter
+      produces:
+      - application/json
+      parameters:
+        - name: id
+          in: path
+          type: integer
+          required: true
+      responses:
+        200:
+          description: single search result matching user id
+          schema:
+            type: object
+            properties:
+              id:
+                type: integer
+              username:
+                type: string
+              userType:
+                type: string
+              firstName:
+                type: string
+              lastName:
+                type: string
+              organization:
+                type: string
+              logo:
+                type: string
+              locationCity:
+                type: string
+              locationState:
+                type: string
+              locationCountry:
+                type: string
+              availability:
+                type: string
+              bio:
+                type: string
+              # join values
+              links:
+                type: array
+                items: 
+                  type: object
+                  properties:
+                    linkType:
+                      type: string
+                    linkURL:
+                      type: string
+                      format: url
+              causes:
+                type: array
+                items: 
+                  type: string
+              skills:
+                type: array
+                items: 
+                  type: string
+              adminOf:
+                type: array
+                description: organizations for which this )individual) user is an admin
+                items: 
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    organization:
+                      type: string
+              admins:
+                type: array
+                description: (individual) users who are admins for this (organization) user
+                items: 
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    firstName:
+                      type: string
+                    lastName:
+                      type: string
+              following:
+                type: array
+                items: 
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    organization:
+                      type: string
+              opportunities: 
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    idUser:
+                      type: string
+                    organization:
+                      type: string
+                    opportunityType:
+                      type: string
+                    offer:
+                      type: boolean
+                    title:
+                      type: string
+                    narrative:
+                      type: string
+                    timestampStart:
+                      type: string
+                    timestampEnd:
+                      type: string
+                    locationCity:
+                      type: string
+                    locationState:
+                      type: string
+                    locationCountry:
+                      type: string
+                    link:
+                      type: string
+                    # join values
+                    causes:
+                      type: array
+                      items: 
+                        type: string
+              responses:
+                type: array
+                items: 
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    idOpportunity:
+                      type: integer
+                    idUser:
+                      type: integer
+                    notes:
+                      type: string
+                      example: free-form text
+                    responseStatus:
+                      type: string
+                      example: offered || accepted || deleted || denied
+                    timestampStatusChange:
+                      type: string
+                    timestampCreated:
+                      type: string
+                    organization:
+                      type: string
+                      example: SQL join at response
+                    firstName:
+                      type: string
+                      example: SQL join at response
+                    lastName:
+                      type: string
+                      example: SQL join at response
+                    title:
+                      type: string
+                      example: copy from state at creation
+        400:
+          description: no matching user found
+        500:
+          description: internal server error
+          
+    put:
+      tags:
+      - appSecure
+      summary: update a single user by id
+      description: update a single user by id
+      consumes: 
+      - application/json
+      produces:
+      - application/json
+      parameters:
+        - name: opportunity
+          in: body
+          description: user to update
+          schema:
+            type: object
+            properties:
+              id:
+                type: integer
+              username:
+                type: string
+              userType:
+                type: string
+              firstName:
+                type: string
+              lastName:
+                type: string
+              organization:
+                type: string
+              logo:
+                type: string
+              locationCity:
+                type: string
+              locationState:
+                type: string
+              locationCountry:
+                type: string
+              availability:
+                type: string
+              bio:
+                type: string
+              # join values
+              links:
+                type: array
+                items: 
+                  type: object
+                  properties:
+                    linkType:
+                      type: string
+                    linkURL:
+                      type: string
+                      format: url
+              causes:
+                type: array
+                items: 
+                  type: string
+              skills:
+                type: array
+                items: 
+                  type: string
+      responses:
+        200:
+          description: updated user
+          schema:
+            type: object
+            properties:
+              id:
+                type: integer
+              username:
+                type: string
+              userType:
+                type: string
+              firstName:
+                type: string
+              lastName:
+                type: string
+              organization:
+                type: string
+              logo:
+                type: string
+              locationCity:
+                type: string
+              locationState:
+                type: string
+              locationCountry:
+                type: string
+              availability:
+                type: string
+              bio:
+                type: string
+              # join values
+              links:
+                type: array
+                items: 
+                  type: object
+                  properties:
+                    linkType:
+                      type: string
+                    linkURL:
+                      type: string
+                      format: url
+              causes:
+                type: array
+                items: 
+                  type: string
+              skills:
+                type: array
+                items: 
+                  type: string
+        400:
+          description: no matching user found
+        500:
+          description: internal server error
+          
+  /api/users/clear/test/data:
+    delete:
+      tags:
+      - admins
+      summary: deletes all users whose username includes 'test' or 'user'
+      responses:
+        200:
+          description: test data deleted
+        500:
+          description: internal server error
+  
+  /api/opportunities:
+    get:
+      tags:
+      - appSecure
+      summary: returns a list of opportunities
+      description: All-purpose endpoint for any combination of opportunities. Accepts any combination of query parameters listed below. Returns all matches found.  If no matches found, returns only status message. If no query parameters are supplied, returns a list of X quantity of opportunities matching static parameters coded on server for teaser content.
+      consumes:
+      - query parameters
+      produces:
+      - application/json
+      parameters:
+      - name: opportunityType
+        type: string
+        in: query
+        description: goods || finanical || services
+        required: false
+      - name: title
+        type: string
+        in: query
+        description: searches title for substring of parameter
+        required: false
+      - name: idUser
+        type: string
+        in: query
+        description: searches for exact match of idUser
+        required: false
+      - name: narrative
+        type: string
+        in: query
+        description: searches narrative for substring of parameter
+        required: false
+      - name: organization
+        type: string
+        in: query
+        description: searches organization for substring of parameter
+        required: false
+      - name: causes
+        type: string
+        in: query
+        description: searches for exact match in join table
+        required: false
+      - name: offer
+        type: boolean
+        in: query
+        description: goods || finanical || services
+        required: false
+      - name: locationCity
+        type: string
+        in: query
+        description: searches for substring in locationCity
+        required: false
+      - name: locationState
+        type: string
+        in: query
+        description: seraches for exact match of state code
+        required: false
+      - name: locationCountry
+        type: string
+        in: query
+        description: searches for exact match of country code
+        required: false
+      - name: link
+        type: string
+        in: query
+        description: searches link for substring of parameter
+        required: false
+      - name: timestampStart
+        type: string
+        in: query
+        description: searches for events starting after given timestamp
+        required: false
+      - name: timestampEnd
+        type: string
+        in: query
+        description: searches events ending before given timestamp
+        required: false
+      - name: responses
+        type: string
+        in: query
+        description: not available; future expansion
+        required: false
+
+      responses:
+        200:
+          description: array of opportunities
+          schema:
+            type: array
+            items:
+              type: object
+              properties:
+                id:
+                  type: integer
+                idUser:
+                  type: string
+                organization:
+                  type: string
+                opportunityType:
+                  type: string
+                offer:
+                  type: boolean
+                title:
+                  type: string
+                logo:
+                  type: string
+                narrative:
+                  type: string
+                timestampStart:
+                  type: string
+                timestampEnd:
+                  type: string
+                locationCity:
+                  type: string
+                locationState:
+                  type: string
+                locationCountry:
+                  type: string
+                link:
+                  type: string
+                # join values
+                causes:
+                  type: array
+                  items: 
+                    type: string
+        400:
+          description: no matching opportunities found
+        500:
+          description: internal server error
+  
+    post:
+      tags:
+      - appSecure
+      summary: create a single opportunity
+      description: create a single opportunity
+      consumes: 
+      - application/json
+      produces:
+      - application/json
+      parameters:
+        - name: opportunity
+          in: body
+          description: opportunity to create
+          schema:
+            type: object
+            properties:
+              idUser:
+                type: string
+              organization:
+                type: string
+              opportunityType:
+                type: string
+              offer:
+                type: boolean
+              title:
+                type: string
+              logo:
+                type: string
+              narrative:
+                type: string
+              timestampStart:
+                type: string
+              timestampEnd:
+                type: string
+              locationCity:
+                type: string
+              locationState:
+                type: string
+              locationCountry:
+                type: string
+              link:
+                type: string
+              # join values
+              causes:
+                type: array
+                items: 
+                  type: string
+      responses:
+        200:
+          description: new opportunity, with id
+          schema:
+            type: object
+            properties:
+              id:
+                type: integer
+              idUser:
+                type: string
+              organization:
+                type: string
+              opportunityType:
+                type: string
+              offer:
+                type: boolean
+              title:
+                type: string
+              narrative:
+                type: string
+              timestampStart:
+                type: string
+              timestampEnd:
+                type: string
+              locationCity:
+                type: string
+              locationState:
+                type: string
+              locationCountry:
+                type: string
+              link:
+                type: string
+              # join values
+              causes:
+                type: array
+                items: 
+                  type: string
+        500:
+          description: internal server error
+          
+  /api/opportunities/{id}:
+    get:
+      tags:
+      - appSecure
+      summary: get single opportunity by id
+      description: get single opportunity by id
+      consumes: 
+      - route parameter
+      produces:
+      - application/json
+      parameters:
+        - name: id
+          in: path
+          type: integer
+          required: true
+      responses:
+        200:
+          description: single search result matching opportunity id
+          schema:
+            type: object
+            properties:
+              id:
+                type: integer
+              idUser:
+                type: string
+              organization:
+                type: string
+              opportunityType:
+                type: string
+              offer:
+                type: boolean
+              title:
+                type: string
+              logo:
+                type: string
+              narrative:
+                type: string
+              timestampStart:
+                type: string
+              timestampEnd:
+                type: string
+              locationCity:
+                type: string
+              locationState:
+                type: string
+              locationCountry:
+                type: string
+              link:
+                type: string
+              # join values
+              causes:
+                type: array
+                items: 
+                  type: string
+              responses:
+                type: array
+                items: 
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    idOpportunity:
+                      type: integer
+                    idUser:
+                      type: integer
+                    notes:
+                      type: string
+                      example: free-form text
+                    responseStatus:
+                      type: string
+                      example: offered || accepted || deleted || denied
+                    timestampStatusChange:
+                      type: string
+                    timestampCreated:
+                      type: string
+                    organization:
+                      type: string
+                      example: copy from state at creation
+                    firstName:
+                      type: string
+                      example: copy from state at creation
+                    lastName:
+                      type: string
+                      example: copy from state at creation
+                    title:
+                      type: string
+                      example: copy from state at creation
+        400:
+          description: no matching opportunities found
+        500:
+          description: internal server error
+          
+    put:
+      tags:
+      - appSecure
+      summary: update a single opportunity by id
+      description: update a single opportunity by id
+      consumes: 
+      - application/json
+      produces:
+      - application/json
+      parameters:
+        - name: opportunity
+          in: body
+          description: opportunity to update
+          schema:
+            type: object
+            properties:
+              id:
+                type: integer
+              idUser:
+                type: integer
+              opportunityType:
+                type: string
+              offer:
+                type: boolean
+              title:
+                type: string
+              logo:
+                type: string
+              narrative:
+                type: string
+              timestampStart:
+                type: string
+              timestampEnd:
+                type: string
+              locationCity:
+                type: string
+              locationState:
+                type: string
+              locationCountry:
+                type: string
+              link:
+                type: string
+              # join values
+              causes:
+                type: array
+                items: 
+                  type: string
+      responses:
+        200:
+          description: updated opportunity
+          schema:
+            type: object
+            properties:
+              id:
+                type: integer
+              idUser:
+                type: integer
+              organization:
+                type: string
+              opportunityType:
+                type: string
+              offer:
+                type: boolean
+              title:
+                type: string
+              logo:
+                type: string
+              narrative:
+                type: string
+              timestampStart:
+                type: string
+              timestampEnd:
+                type: string
+              locationCity:
+                type: string
+              locationState:
+                type: string
+              locationCountry:
+                type: string
+              link:
+                type: string
+              # join values
+              causes:
+                type: array
+                items: 
+                  type: string
+        400:
+          description: no matching opportunity found
+        500:
+          description: internal server error
+
+  /api/roles:
+    post:
+      tags:
+      - appSecure
+      summary: add a role
+      description: add a role, either following or admin.
+      consumes: 
+      - application/json
+      produces:
+      - application/json
+      parameters:
+        - name: role
+          in: body
+          description: opportunity to create
+          schema:
+            type: object
+            properties:
+              idUserAdding:
+                type: integer
+              idUserReceiving:
+                type: integer
+              capabilities:
+                type: string
+                example: admin or following
+      responses:
+        200:
+          description: Returns new role
+          schema:
+            type: object
+            properties:
+              id:
+                type: integer
+              idUserAdding:
+                type: integer
+              idUserReceiving:
+                type: integer
+              organization:
+                type: string
+                example: SQL join at response
+              capabilities:
+                type: string
+        500:
+          description: internal server error
+  
+  /api/roles{id}:
+    put:
+      tags:
+      - appSecure
+      summary: edit a role by role id
+      description: edit a role, either following or admin. User's are only able to edit roles that they added, i.e. a user may only edit a role in which the user's id matches the role's idUserAdding.
+      consumes: 
+      - application/json
+      produces:
+      - application/json
+      parameters:
+        - name: id
+          in: path
+          type: integer
+          required: true
+        - name: role
+          in: body
+          description: role
+          schema:
+            type: object
+            properties:
+              idUserAdding:
+                type: integer
+              idUserReceiving:
+                type: integer
+              capabilities:
+                type: string
+                example: admin or following
+      responses:
+        200:
+          description: Returns edited role
+          schema:
+            type: object
+            properties:
+              id:
+                type: integer
+              idUserAdding:
+                type: integer
+              idUserReceiving:
+                type: integer
+              organization:
+                type: string
+                example: SQL join at response
+              capabilities:
+                type: string
+        500:
+          description: internal server error
+          
+    delete:
+      tags:
+      - appSecure
+      summary: delete a role
+      description: delete a role, either following or admin. User's are only able to delete roles that they added, i.e. a user may only delete a role in which the user's id matches the role's idUserAdding.
+      consumes: 
+      - application/json
+      produces:
+      - application/json
+      parameters:
+        - name: id
+          in: path
+          type: integer
+          required: true
+        - name: idUserAdding
+          in: body
+          description: id of user who originally added role
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Finds the role by id; checks to ensure id of user adding is a match; if so, deletes, if not, returns not-deleted response.
+        400:
+          description: no matching role found
+        401:
+          description: permission denied
+        500:
+          description: internal server error
+          
+  /api/responses:
+    post:
+      tags:
+      - appSecure
+      summary: add a reponse
+      description: add a response to an opportunity.
+      consumes: 
+      - application/json
+      produces:
+      - application/json
+      parameters:
+        - name: response
+          in: body
+          description: response object
+          schema:
+            type: object
+            properties:
+              idOpportunity:
+                type: integer
+              idUser:
+                type: integer
+              notes:
+                type: string
+                example: free-form text
+      responses:
+        200:
+          description: Return response as confirmation
+          schema:
+            type: object
+            properties:
+              id:
+                type: integer
+              idOpportunity:
+                type: integer
+              idUser:
+                type: integer
+              notes:
+                type: string
+                example: free-form text
+              responseStatus:
+                type: string
+                default: offered 
+        500:
+          description: internal server error
+  
+  /api/responses{id}:
+    put:
+      tags:
+      - appSecure
+      summary: edit or 'delete' a response
+      description: edit or 'delete' a response, either that the user has posted or received.
+      consumes: 
+      - application/json
+      produces:
+      - application/json
+      parameters:
+        - name: id
+          in: path
+          type: integer
+          required: true
+        - name: resopnse
+          in: body
+          description: response object
+          schema:
+            type: object
+            properties:
+              id:
+                type: integer
+              idOpportunity:
+                type: integer
+              idUser:
+                type: integer
+              notes:
+                type: string
+                example: free-form text
+              responseStatus:
+                type: string
+                example: offered || accepted || deleted || denied
+      responses:
+        200:
+          description: Returns edited response.
+          schema:
+            type: object
+            properties:
+              id:
+                type: integer
+              idOpportunity:
+                type: integer
+              idUser:
+                type: integer
+              notes:
+                type: string
+                example: free-form text
+              responseStatus:
+                type: string
+                example: offered || accepted || deleted || denied
+        400:
+          description: response not found  
+        500:
+          description: internal server error
+          
+
+definitions:
+  user:
+    type: object
+    description: user table encompasses users of any type (individuals and organizations). Primitive values are stored in SQL database (id-bio, below). authToken is not stored in DB, but is generated on login and saved in user object on front end. Arrays (links-opportunities, below) are saved in join tables and are only added to the user object via SQL join on fetch.
+    required:
+    - id
+    - username
+    - userType
+    - firstName
+    - lastName
+    - organization
+    properties:
+    # primitive values
+      id:
+        type: integer
+        format: serial
+        example: 1
+      username:
+        type: string
+        example: bobsmith
+      userType:
+        type: string
+        example: individual || organization
+        description: limited to individual and organization
+      firstName:
+        type: string
+        example: Bob
+      lastName:
+        type: string
+        example: Smith
+      organization:
+        type: string
+        example: Capital Food Bank
+      logo:
+        type: string
+        format: url
+        example: http://mylogo.com
+      locationCity:
+        type: string
+        example: Washington
+      locationState:
+        type: string
+        example: DC
+      locationCountry:
+        type: string
+        example: US
+      availability:
+        type: string
+        example: Mondays from 3:00 to 5:00
+      bio:
+        type: string
+        example: This is my bio...
+      # authentication values
+      password:
+        type: string
+        description: stored as hash, not returned in fetch call
+      authToken:
+        type: string
+        format: jwt
+        description: not stored on back end, only created on fetch
+      # join values
+      links:
+        type: array
+        items: 
+          type: object
+          properties:
+            linkType:
+              type: string
+            linkURL:
+              type: string
+              format: url
+      causes:
+        type: array
+        items: 
+          type: string
+      skills:
+        type: array
+        items: 
+          type: string
+      adminOf:
+        type: array
+        description: list of users who are an admin for this user (organization). Refer to roles table to join information.
+        items: 
+          type: object
+          properties:
+            id:
+              type: integer
+              description: organization id
+            organization:
+              type: string
+              description: organization name via SQL join
+      following:
+        type: array
+        description: list of users whom this user is following. Refer to roles table to join information.
+        items: 
+          type: object
+          properties:
+            id:
+              type: integer
+              description: organization id
+            organization:
+              type: string
+              description: organization name via SQL join
+      opportunities: 
+        type: array
+        items:
+          type: object
+          example: join opportunity object
+      responses:
+        type: array
+        items: 
+          type: object
+          example: join responses object
+
+
+  opportunity:
+    type: object
+    description: opportunity table encompasses users of any type (offer to meet needs, request to meet needs). Primitive values are stored in SQL database (id-bio, below). Arrays (links-following, below) are saved in join tables and are only added to the user object via SQL join on fetch.
+    required:
+    - id
+    - idUser
+    - organization
+    - opportunityType
+    - offer
+    - title
+    - narrative
+    properties:
+    # primitive values
+      id:
+        type: integer
+        format: serial
+        example: 1
+      idUser:
+        type: string
+        example: bobsmith
+      organization:
+        type: string
+        example: Capital Food Bank
+        description: copy of organization name to minimize SQL joins
+      opportunityType:
+        type: string
+        example: goods || services || finanical
+      offer:
+        type: boolean
+        description: true if offer to meet needs
+        default: false
+      title:
+        type: string
+        example: bake sale
+      logo:
+        type: string
+        example: http://myeventlogo.com
+      narrative:
+        type: string
+        example: Bring your toolboxes to ...
+      timestampStart:
+        type: string
+        format: int32
+        example: 2016-08-29T09:12:33.001Z
+      timestampEnd:
+        type: string
+        format: int32
+        example: 2016-08-29T09:12:33.001Z
+      locationCity:
+        type: string
+        example: Washington
+      locationState:
+        type: string
+        example: DC
+      locationCountry:
+        type: string
+        example: US
+      link:
+        type: string
+        format: url
+        example: http://mylogo.com
+      # join values
+      causes:
+        type: array
+        items: 
+          type: string
+      responses:
+        type: array
+        items:
+          type: object
+          example: full response object
+      
+  responses:
+    type: object
+    description: responses are saved in responses table and joined to this table.
+    properties:
+      id:
+        type: integer
+      idOpportunity:
+        type: integer
+        description: the owner of the opportunity can be found via the opportunity; the owner's id is not saved in the response.
+      idUser:
+        type: integer
+        description: this is the user who responded to the opportunity
+      notes:
+        type: string
+        example: free-form text
+      responseStatus:
+        type: string
+        description: Allowable properties are 'offered' (user has responded), 'accepted' (owner of opportunity has accepted response), 'done' (respondse was accepted, but is in the past), 'deleted' (user has withdrawn response, prior to event occurence), 'denied' (owner of opportunity declined offer) 
+      timestampStatusChange:
+        type: string
+        format: int32
+        example: '2016-08-29T09:12:33.001Z'
+      timestampCreated:
+        type: string
+        format: int32
+        example: '2016-08-29T09:12:33.001Z'
+        
+  roles:
+    type: object
+    description: relationships of one user to another, including users following other users, and users being assigned roles of another user (an organization). Roles contain capabilities. *** 
+      To show who the user is following, search idUserAdding matching user's id, and role 'following'. *** 
+      To show user's followers, search idUserReceiving matching user's id, and role 'following'.  *** 
+      To show which accounts user has admin privileges to, search idUserReceiving matching user's id, and role 'admin'.  *** 
+      To show the list of admins for an organization, search idUserAdding matching user's id and role 'admin'.
+    properties:
+      id:
+        type: integer
+      idUserAdding:
+        type: integer
+      idUserReceiving:
+        type: integer
+      capabilities:
+        type: string
+        example: following or admin
+
+# Added by API Auto Mocking Plugin
+host: virtserver.swaggerhub.com
+basePath: /Brad-Garner/npmatch/1.0.0
+schemes:
+ - https
