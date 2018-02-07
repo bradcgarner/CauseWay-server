@@ -114,12 +114,13 @@ const keys = {
     idUserReceiving: 'id_user_receiving',
     organization: null
   },
-  opportunitiesKeysRaw: [
+  opportunitiesKeysRawInsert: [
     'id',
     'id_user',
     'opportunity_type',
     'offer',
     'title',
+    'logo',
     'narrative',
     'timestamp_start',
     'timestamp_end',
@@ -128,11 +129,12 @@ const keys = {
     'location_country',
     'link'
   ],
-  opportunitiesKeysInsertCC: [
+  opportunitiesKeysRawCC: [
     'idUser',
     'opportunityType',
     'offer',
     'title',
+    'logo',
     'narrative',
     'timestampStart',
     'timestampEnd',
@@ -175,6 +177,22 @@ const keys = {
     'opportunities.location_state as locationState',
     'opportunities.location_country as locationCountry',
     'link'
+  ],
+  responseKeysRawCC: [
+    'id',
+    'idOpportunity',
+    'idUser',
+    'notes',
+    'responseStatus',
+    'timestampStatusChange',
+  ],
+  responseKeysRawInsert: [
+    'id',
+    'id_opportunity',
+    'id_user',
+    'notes',
+    'response_status',
+    'timestamp_status_change',
   ],
   responsesUsersKeys: [
     'responses.id as id',

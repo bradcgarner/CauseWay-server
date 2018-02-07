@@ -2,22 +2,6 @@
 const { keys } = require('./helper-keys');
 const { usersListSelectStatement, oppsListSelectStatement } = require('./helper-sql');
 
-const rawFromQuery = (queryObjectCC = {}, table, selectStatement) => {
-  const select = selectStatement ? selectStatement : 'SELECT *' ;
-  let rawSql = `${select} FROM ${table}`;
-  if(Object.keys(queryObjectCC).length > 0) {
-
-    const queryObject = convertCase(queryObjectCC, 'ccToSnake');
-    const arrayOfQueries = Object.keys(queryObject).map( key => {
-      return `LOWER(${key}) LIKE LOWER('%${queryObject[key]}%')`;
-    });
-    rawSql = arrayOfQueries.length > 1 ?
-      `${select} FROM ${table} WHERE (${arrayOfQueries.join(') AND (')})`
-      : `${select} FROM ${table} WHERE ${arrayOfQueries[0]}` ;
-  }
-  return rawSql;
-};
-
 let helper = {}; 
 
 helper.buildUsersList = function(queryObject) {
@@ -197,19 +181,19 @@ helper.getExtUserInfo = function(idUser) {
     });
 };
 
-helper.buildOppList = function(queryObject) {
-  const table = 'opportunities';
-  const selectStatement = oppsListSelectStatement();
-  const rawSql = rawFromQuery(queryObject, table, selectStatement);
-  const knex = require('../db');
-  return knex
-    .raw(rawSql) 
-    .then( opps => {
-      const oppsList = opps.rows.map(opp=> convertCase(opp, 'snakeToCC'));
+// helper.buildOppList = function(queryObject) {
+//   const table = 'opportunities';
+//   const selectStatement = oppsListSelectStatement();
+//   const rawSql = rawFromQuery(queryObject, table, selectStatement);
+//   const knex = require('../db');
+//   return knex
+//     .raw(rawSql) 
+//     .then( opps => {
+//       const oppsList = opps.rows.map(opp=> convertCase(opp, 'snakeToCC'));
 
-      const oppsListCauses = pushPrimitiveRepsIntoArray(oppsList, 'causes');
-      const oppsListUsers = pushNestedKeysIntoArray(oppsListCauses, 'users', keys.usersKeysAppendToOpportunityRaw);
-        
+//       const oppsListCauses = pushPrimitiveRepsIntoArray(oppsList, 'causes');
+//       const oppsListUsers = pushNestedKeysIntoArray(oppsListCauses, 'users', keys.usersKeysAppendToOpportunityRaw);
+//       console.log('oppsListUsers',oppsListUsers);
       // START DELETING !!!!!!!!!!!
       //   const causePromisesArray = oppsList.map((opp,index)=>{
       //     return knex('opportunities_causes')
@@ -243,12 +227,12 @@ helper.buildOppList = function(queryObject) {
       // })
       // .then(oppsList=>{
 
-      return oppsListUsers.sort((a,b)=>{ // sort is not immutable
-        return a.timestamp_start < b.timestamp_start ? -1 :
-          a.timestamp_start > b.timestamp_start ? 1 : 0;
-      });      
-    });
-};
+//       return oppsListUsers.sort((a,b)=>{ // sort is not immutable
+//         return a.timestamp_start < b.timestamp_start ? -1 :
+//           a.timestamp_start > b.timestamp_start ? 1 : 0;
+//       });      
+//     });
+// };
 
 helper.buildOpp = function(inOppId) {
   // console.log('start built opp',inOppId);
@@ -348,13 +332,13 @@ helper.buildOppCausesArr = function(oppId, inCausesArr) {
     });
 };
 
-helper.buildResponse = function(inRespId) {
+helper.buildResponse = function(idResponse) {
   let response = {};
 
   const knex = require('../db');
   return knex('responses')
     .join('users', 'responses.id_user', '=', 'users.id')
-    .where('responses.id', '=', inRespId)
+    .where('responses.id', '=', idResponse)
     .select(keys.responsesUsersKeys)
     .then( result => {
       response = convertCase(result[0], 'snakeToCC');
@@ -377,7 +361,21 @@ helper.getOrgName = function(idUser) {
       return (result[0].organization);
     });
 };
+const rawFromQuery = (queryObjectCC = {}, table, selectStatement) => {
+  const select = selectStatement ? selectStatement : 'SELECT *' ;
+  let rawSql = `${select} FROM ${table}`;
+  if(Object.keys(queryObjectCC).length > 0) {
 
+    const queryObject = convertCase(queryObjectCC, 'ccToSnake');
+    const arrayOfQueries = Object.keys(queryObject).map( key => {
+      return `LOWER(${key}) LIKE LOWER('%${queryObject[key]}%')`;
+    });
+    rawSql = arrayOfQueries.length > 1 ?
+      `${select} FROM ${table} WHERE (${arrayOfQueries.join(') AND (')})`
+      : `${select} FROM ${table} WHERE ${arrayOfQueries[0]}` ;
+  }
+  return rawSql;
+};
 
 // @@@@@@@@@@@@@ COMPACTING JOIN ARRAYS @@@@@@@@@@@@@@
 
@@ -444,7 +442,7 @@ const pushLinksIntoArray = (object) => {
 };
 
 function convertCase(inputObject, mode, limitingList) {
-  // console.log('inputObject', inputObject);
+  console.log('inputObject', inputObject);
   const caseObject = {};
   const conversionTable = mode === 'ccToSnake' ? keys.ccToSnake : keys.snakeToCC ;
 
@@ -469,4 +467,11 @@ function convertCase(inputObject, mode, limitingList) {
   return caseObject;
 }
 
-module.exports = { helper, convertCase };
+module.exports = { 
+  helper, 
+  convertCase, 
+  pushNestedKeysIntoArray, 
+  pushLinksIntoArray, 
+  pushPrimitiveRepsIntoArray,
+  rawFromQuery,
+};

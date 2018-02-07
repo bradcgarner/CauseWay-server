@@ -4,7 +4,9 @@ const express = require('express');
 const passport = require('passport');
 const { jwtStrategy } = require('./auth/jwt-strategy');
 const oppRouter = express.Router();
-const { helper, convertCase } = require('./helper');
+const { helper, convertCase , pushPrimitiveRepsIntoArray, pushNestedKeysIntoArray, rawFromQuery } = require('./helper');
+const { oppsListSelectStatement } = require('./helper-sql');
+const { keys } = require('./helper-keys');
 const bodyParser = require('body-parser');
 const jsonParser = bodyParser.json();
 
@@ -15,9 +17,25 @@ const jwtAuth = passport.authenticate('jwt', { session: false });
 
 //GET api/opportunities/
 oppRouter.get('/', (req, res) => {
-  // check for query parameters
   const queryObject = Object.keys(req.query).length > 0 ? req.query : {} ;
-  return helper.buildOppList(queryObject)
+  const table = 'opportunities';
+  const selectStatement = oppsListSelectStatement();
+  const rawSql = rawFromQuery(queryObject, table, selectStatement);
+  const knex = require('../db');
+  return knex
+    .raw(rawSql) 
+    .then( opps => {
+      const oppsList = opps.rows.map(opp=> convertCase(opp, 'snakeToCC'));
+  
+      const oppsListCauses = pushPrimitiveRepsIntoArray(oppsList, 'causes');
+      const oppsListUsers = pushNestedKeysIntoArray(oppsListCauses, 'users', keys.usersKeysAppendToOpportunityRaw);
+      console.log('oppsListUsers',oppsListUsers);
+  
+      return oppsListUsers.sort((a,b)=>{ // sort is not immutable
+        return a.timestamp_start < b.timestamp_start ? -1 :
+          a.timestamp_start > b.timestamp_start ? 1 : 0;
+      });      
+    })
     .then( oppList => {
       res.json(oppList);
     })
@@ -39,18 +57,14 @@ oppRouter.get('/:id', (req, res) => {
 
 // POST api/opportunities
 oppRouter.post('/', jsonParser, (req, res) => {
-  let oppId;
+  const knex = require('../db');
   let oppFromClient = req.body;
-  let retObj = {};
-  let inCausesArr = !Array.isArray(oppFromClient.causes) ? [] :
-    (oppFromClient.causes.length > 0) ? oppFromClient.causes.slice() : [] ;
-  console.log('oppFromClient',oppFromClient,inCausesArr);
-  // check for missing fields
+  let causesArrayFromClient = !Array.isArray(oppFromClient.causes) ? oppFromClient.causes : [] ;
+  // console.log('oppFromClient',oppFromClient,causesArrayFromClient);
   const reqFields = ['title', 'narrative', 'idUser', 'causes', 'timestampStart', 'timestampEnd'];
   const missingField = reqFields.find( field => !(field in oppFromClient));
   if(missingField) {
     console.log('missingField',missingField);
-
     return res.status(422).json({
       code: 422,
       reason: 'ValidationError',
@@ -59,69 +73,32 @@ oppRouter.post('/', jsonParser, (req, res) => {
     });
   }
   // post base opportunity info - get id'
-  const postOppObj = convertCase(oppFromClient, 'ccToSnake', 'opportunitiesKeysInsertCC');
-  console.log('postOppObj to insert', postOppObj);
-
-  const knex = require('../db');
+  const oppFormatted = convertCase(oppFromClient, 'ccToSnake', 'opportunitiesKeysRawInsert');
+  console.log('oppFormatted to insert', oppFormatted);
 
   return knex('opportunities')
-    .insert(postOppObj)
+    .insert(oppFormatted)
     .returning(['id'])
     .then( idReturned => {
-      console.log('idReturned',idReturned);
-
-      oppId = idReturned[0].id;
-      console.log('oppId',oppId);
-
-      if(inCausesArr.length > 0) {
-        console.log('inCausesArr',inCausesArr);
-
-        return helper.buildOppCausesArr(oppId, inCausesArr)
-
-          .then( postCausesArr => {
-            console.log('postCausesArr',postCausesArr);
-            return knex('opportunities_causes')
-              .insert(postCausesArr);
-          });
-      }
-      else {
-        // no causes in req, skip to response
-        console.log('no causes');
-
-        return;
-      }
+      res.status(200).json({id: idReturned[0].id} );      
     })
-    .then( () => {
-      console.log('ready to build opp');
-
-      return helper.buildOpp(oppId)
-        .then( result => {
-          console.log('built opp',result);
-
-          retObj = Object.assign( {}, result);
-          res.status(201).json(retObj);      
-        })
-        .catch( err => {
-          console.log('err',err);
-
-          if(err.reason === 'ValidationError') {
-            console.log('ValidationError');
-
-            return res.status(err.code).json(err);
-          }
-          res.status(500).json({message: `Internal server error: ${err}`});
-        });
+    .catch( err => {
+      if(err.reason === 'ValidationError') {
+        return res.status(err.code).json(err);
+      }
+      res.status(500).json({message: `Internal server error: ${err}`});
     });
 });
 
 
 // PUT api/opportunities/:id
 oppRouter.put('/:id', jsonParser, (req, res) => {
+  const knex = require('../db');
   let oppFromClient = req.body;
   if(oppFromClient.id) { delete oppFromClient.id; } 
   let oppId = req.params.id;
   let retObj = {};
-  let inCausesArr = oppFromClient.causes.slice();
+  let causesArrayFromClient = oppFromClient.causes.slice();
 
   // check for missing fields
   const reqFields = ['title', 'narrative', 'idUser', 'causes'];
@@ -135,13 +112,11 @@ oppRouter.put('/:id', jsonParser, (req, res) => {
     });
   }
 
-  // update base opportunity info'
-  const postOppObj = helper.convertCase(oppFromClient, 'ccToSnake', 'opportunitiesKeysInsertCC');
-  const knex = require('../db');
+  const oppFormatted = helper.convertCase(oppFromClient, 'ccToSnake', 'opportunitiesKeysRawInsert');
 
   return knex('opportunities')
     .where('id', '=', oppId)
-    .update(postOppObj)
+    .update(oppFormatted)
     .returning(['id', 'opportunity_type as opportunityType', 'narrative', 'location_city', 'location_state'])
 
     .then( results => {
@@ -149,8 +124,8 @@ oppRouter.put('/:id', jsonParser, (req, res) => {
         .where('id_opportunity', '=', oppId)
         .del()
         .then( () => {
-          if(inCausesArr.length > 0) {
-            return helper.buildOppCausesArr(oppId, inCausesArr)
+          if(causesArrayFromClient.length > 0) {
+            return helper.buildOppCausesArr(oppId, causesArrayFromClient)
               .then( postCausesArr => {
                 return knex('opportunities_causes')
                   .insert(postCausesArr);

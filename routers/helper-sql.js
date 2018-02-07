@@ -122,7 +122,7 @@ const usersListSelectStatement = () => {
 
 const oppsListSelectStatement = () => {
   // output 'SELECT [all opportunities field], (SELECT complex join) as x1, (SELECT complex join) as y1'
-  const opps =     keys.opportunitiesKeysRaw.map(key => `opportunities.${key}`);
+  const opps =     keys.opportunitiesKeysRawInsert.map(key => `opportunities.${key}`);
   const causes    = oneManyQueryOppsToCauses();
   const usersList = keys.usersKeysAppendToOpportunityRaw.map(key=>{
     const correctedKey = key.includes('.') ? key.slice(key.indexOf('.')+1,key.length) : key ;

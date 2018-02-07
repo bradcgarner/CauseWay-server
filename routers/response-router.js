@@ -33,7 +33,7 @@ responseRouter.post('/', jsonParser, (req, res) => {
       message: 'Error: opportunity and user id required'
     });
   }
-  respPostObj = convertCase(req.body, 'ccToSnake');
+  respPostObj = convertCase(req.body, 'ccToSnake', 'responseKeysRawInsert');
   return knex('responses')
     .insert(respPostObj)
     .returning ('id')
@@ -53,12 +53,12 @@ responseRouter.post('/', jsonParser, (req, res) => {
 
 // PUT api/responses/:id
 responseRouter.put('/:id', jsonParser, (req, res) => {
-  const respId = req.params.id;
+  const idResponse = req.params.id;
   const knex = require('../db');
-  let respPutObj = {};
+  let responseObject = req.body;
 
   // check for required fields
-  const reqFields = ['idUser', 'idOpportunity', 'notes'];
+  const reqFields = ['idUser', 'idOpportunity'];
   const missingField = reqFields.filter( field => !(field in req.body));
   if(missingField.length > 0) {
     return res.status(422).json({
@@ -67,25 +67,22 @@ responseRouter.put('/:id', jsonParser, (req, res) => {
       message: 'Error: opportunity, user id and notes required'
     });
   }
-  respPutObj = convertCase(req.body, 'ccToSnake');
-  if(respPutObj.id) { delete respPutObj.id; }
-  respPutObj = Object.assign( {}, respPutObj, {
-    timestamp_status_change: new Date()
-  });
+  const responseFormatted = convertCase(req.body, 'ccToSnake', 'responseKeysRawInsert');
+  responseFormatted.timestamp_status_change = new Date();
+  
   return knex('responses')
-    .update(respPutObj)
-    .where('id', '=', respId)
-    .then( () => {
-      return (helper.buildResponse( respId ))
-        .then ( result => {
-          delete result.timestampStatusChange;
-          delete result.timestampCreated;
-          delete result.firstName;
-          delete result.lastName;
-          delete result.title;
-          delete result.organization;
-          res.json(result);
-        });
+    .update(responseFormatted)
+    .where('id', '=', idResponse)
+    .then(() => {
+      // return (helper.buildResponse( idResponse ))
+      //   .then ( result => {
+      // delete result.timestampStatusChange;
+      // delete result.timestampCreated;
+      // delete result.firstName;
+      // delete result.lastName;
+      // delete result.title;
+      // delete result.organization;
+      res.json(responseObject);
     })
     .catch( err => {
       if(err.reason === 'ValidationError') {
