@@ -13,11 +13,6 @@ process.stdout.write('\x1Bc');
 passport.use(jwtStrategy);
 const jwtAuth = passport.authenticate('jwt', { session: false });
 
-// comm test
-responseRouter.get('/testify/', (req, res) => {
-  res.status(200).json({message: 'Good to go'});
-});
-
 // POST api/responses
 responseRouter.post('/', jsonParser, (req, res) => {
   const knex = require('../db');
@@ -38,6 +33,7 @@ responseRouter.post('/', jsonParser, (req, res) => {
     .insert(respPostObj)
     .returning ('id')
     .then( rId => {
+      console.log('rId',rId)
       return (helper.buildResponse( rId[0] ))
         .then ( result => {
           res.json(result);
@@ -74,14 +70,6 @@ responseRouter.put('/:id', jsonParser, (req, res) => {
     .update(responseFormatted)
     .where('id', '=', idResponse)
     .then(() => {
-      // return (helper.buildResponse( idResponse ))
-      //   .then ( result => {
-      // delete result.timestampStatusChange;
-      // delete result.timestampCreated;
-      // delete result.firstName;
-      // delete result.lastName;
-      // delete result.title;
-      // delete result.organization;
       res.json(responseObject);
     })
     .catch( err => {

@@ -36,7 +36,7 @@ roleRouter.post('/', jsonParser, (req, res) => {
     rolePostObj.id_user_adding : rolePostObj.id_user_receiving;
   console.log('orgId', orgId);
 
-  return helper.getOrg(orgId)
+  return helper.getOrgName(orgId)
     .then( org => {
       console.log('org', org);
       orgName = org;

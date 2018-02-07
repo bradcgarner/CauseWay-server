@@ -4,23 +4,23 @@ const express = require('express');
 const adminRouter = express.Router();
 const bodyParser = require('body-parser');
 const jsonParser = bodyParser.json();
-const { helper } = require('./helper');
+const { helper, rawSqlFromQuery } = require('./helper');
+const { oppsListSelectStatement } = require('./helper-sql');
 
 process.stdout.write('\x1Bc');
 
 // GET api/admin/initialize
 adminRouter.get('/initialize', (req, res) => {
-  let resObj = {};
+  const knex = require('../db');
   let causeArray = [];
   let skillArray = [];
   let userArray = [];
-
-  const knex = require('../db');
+  let oppsArray = [];
 
   // get users
   return helper.buildUsersList()
     .then(usersList => {
-      console.log('usersList admin router',usersList[0]);
+      // console.log('usersList admin router',usersList[0]);
       userArray = usersList.slice();
     })
 
@@ -30,8 +30,8 @@ adminRouter.get('/initialize', (req, res) => {
         .select('cause')
         .orderBy('cause');
     })
-    .then( results => {
-      results.map( cause => causeArray.push(cause.cause));
+    .then( causesFound => {
+      causeArray = causesFound.map(cause => cause.cause);
     })
 
     // get skills
@@ -40,20 +40,33 @@ adminRouter.get('/initialize', (req, res) => {
         .select('skill')
         .orderBy('skill');
     })
-    .then( results => {
-      results.map( skill => skillArray.push(skill.skill));
+    .then( skillsFound => {
+      skillArray = skillsFound.map(skill => skill.skill);
+    })
+
+    // get opps
+    .then(() => {
+      const table = 'opportunities';
+      const selectStatement = oppsListSelectStatement();
+      const rawSql = rawSqlFromQuery({}, table, selectStatement);
+      return helper.buildOppsList(rawSql);
+    })
+    .then( oppsFound => {
+      oppsArray = oppsFound.slice();
     })
 
     .then( () => {
-      resObj = Object.assign( {}, {
+      const response = Object.assign( {}, {
         users: userArray,
         causes: causeArray,
-        skills: skillArray
+        skills: skillArray,
+        opportunities: oppsArray,
       });
+      console.log('response', response);
       res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
       res.setHeader("Pragma", "no-cache");
       res.setHeader("Expires", 0);      
-      res.status(201).json(resObj);
+      res.status(201).json(response);
     })
     .catch( err => {
       res.status(500).json({message: `Internal server error: ${err}`});

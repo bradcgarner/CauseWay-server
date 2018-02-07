@@ -38,7 +38,6 @@ CREATE TABLE opportunities (
   id serial primary key,
   -- the user below is the "owner" of this opportunity
   id_user integer references users on delete cascade,
-  organization text,
   -- type: goods, services, financial
   opportunity_type text default 'services',
   -- offer: true if offer to provide, false if a need

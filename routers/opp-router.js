@@ -4,7 +4,7 @@ const express = require('express');
 const passport = require('passport');
 const { jwtStrategy } = require('./auth/jwt-strategy');
 const oppRouter = express.Router();
-const { helper, convertCase , pushPrimitiveRepsIntoArray, pushNestedKeysIntoArray, rawFromQuery } = require('./helper');
+const { helper, convertCase, rawSqlFromQuery } = require('./helper');
 const { oppsListSelectStatement } = require('./helper-sql');
 const { keys } = require('./helper-keys');
 const bodyParser = require('body-parser');
@@ -20,22 +20,10 @@ oppRouter.get('/', (req, res) => {
   const queryObject = Object.keys(req.query).length > 0 ? req.query : {} ;
   const table = 'opportunities';
   const selectStatement = oppsListSelectStatement();
-  const rawSql = rawFromQuery(queryObject, table, selectStatement);
+  const rawSql = rawSqlFromQuery(queryObject, table, selectStatement);
   const knex = require('../db');
-  return knex
-    .raw(rawSql) 
-    .then( opps => {
-      const oppsList = opps.rows.map(opp=> convertCase(opp, 'snakeToCC'));
-  
-      const oppsListCauses = pushPrimitiveRepsIntoArray(oppsList, 'causes');
-      const oppsListUsers = pushNestedKeysIntoArray(oppsListCauses, 'users', keys.usersKeysAppendToOpportunityRaw);
-      console.log('oppsListUsers',oppsListUsers);
-  
-      return oppsListUsers.sort((a,b)=>{ // sort is not immutable
-        return a.timestamp_start < b.timestamp_start ? -1 :
-          a.timestamp_start > b.timestamp_start ? 1 : 0;
-      });      
-    })
+
+  return helper.buildOppsList(rawSql)
     .then( oppList => {
       res.json(oppList);
     })
@@ -58,9 +46,8 @@ oppRouter.get('/:id', (req, res) => {
 // POST api/opportunities
 oppRouter.post('/', jsonParser, (req, res) => {
   const knex = require('../db');
-  let oppFromClient = req.body;
-  let causesArrayFromClient = !Array.isArray(oppFromClient.causes) ? oppFromClient.causes : [] ;
-  // console.log('oppFromClient',oppFromClient,causesArrayFromClient);
+  let oppId;
+  const oppFromClient = req.body;
   const reqFields = ['title', 'narrative', 'idUser', 'causes', 'timestampStart', 'timestampEnd'];
   const missingField = reqFields.find( field => !(field in oppFromClient));
   if(missingField) {
@@ -78,9 +65,20 @@ oppRouter.post('/', jsonParser, (req, res) => {
 
   return knex('opportunities')
     .insert(oppFormatted)
-    .returning(['id'])
-    .then( idReturned => {
-      res.status(200).json({id: idReturned[0].id} );      
+    .returning(keys.opportunitiesKeysRaw)
+    .then( oppInserted => {
+      oppId = oppInserted.id;
+      res.status(200).json(oppInserted);
+    })
+    .then(()=>{
+      if (!Array.isArray(oppFromClient.causes)) {
+        if (oppFromClient.causes.length > 0) {
+          const oppCausesArray = helper.buildOppCausesArr(oppId, oppFromClient.causes);
+          return knex('opportunities_causes')
+            .insertMany(oppCausesArray);
+        }
+      }
+      return Promise.resolve;
     })
     .catch( err => {
       if(err.reason === 'ValidationError') {
@@ -112,7 +110,7 @@ oppRouter.put('/:id', jsonParser, (req, res) => {
     });
   }
 
-  const oppFormatted = helper.convertCase(oppFromClient, 'ccToSnake', 'opportunitiesKeysRawInsert');
+  const oppFormatted = convertCase(oppFromClient, 'ccToSnake', 'opportunitiesKeysRawInsert');
 
   return knex('opportunities')
     .where('id', '=', oppId)

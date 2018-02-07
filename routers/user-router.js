@@ -21,7 +21,9 @@ userRouter.get('/', (req, res) => {
   let queryObject = {};
   if(Object.keys(req.query).length > 0) {
     queryObject = req.query;
-  }
+  } 
+  console.log(' queryObject ', queryObject);
+
   return helper.buildUsersList(queryObject)
     .then(usersList => {
       console.log(' @@@@@@@@@ ', usersList);

@@ -143,6 +143,19 @@ const keys = {
     'locationCountry',
     'link'
   ],
+  opportunitiesKeysRaw: [
+    'id',
+    'opportunity_type',
+    'offer',
+    'title',
+    'narrative',
+    'timestamp_start',
+    'timestamp_end',
+    'location_city',
+    'location_state',
+    'location_country',
+    'link'
+  ],
   opportunitiesKeys: [
     'id',
     'opportunity_type as opportunityType',
@@ -193,6 +206,18 @@ const keys = {
     'notes',
     'response_status',
     'timestamp_status_change',
+  ],
+  responsesUsersKeysRaw: [
+    'responses.id as id',
+    'id_user',
+    'id_opportunity',
+    'response_status',
+    'timestamp_status_change',
+    'responses.timestamp_created',
+    'notes',
+    'users.first_name',
+    'users.last_name',
+    'users.organization',
   ],
   responsesUsersKeys: [
     'responses.id as id',
