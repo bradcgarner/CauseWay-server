@@ -93,6 +93,12 @@ const keys = {
     'users.organization',
     'users.availability',
   ],
+  rolesKeysReturning: [
+    'id',
+    'id_user_adding as idUserAdding',
+    'id_user_receiving as idUserReceiving',
+    'capabilities'
+  ],
   rolesKeys: [
     'roles.id as id',
     'id_user_adding as idUserAdding',
@@ -104,6 +110,12 @@ const keys = {
     'users.location_state as locationState',
     'users.organization',
     'capabilities'
+  ],
+  rolesKeysRawInsert: [
+    'capabilities',
+    'id_user_adding',
+    'id_user_receiving',
+    'organization',
   ],
   rolesKeysRaw: {
     capabilities: null,
